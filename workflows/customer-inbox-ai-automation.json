@@ -1,0 +1,473 @@
+{
+  "name": "AI Workflow Automation Platform - 客户咨询智能受理",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "customer-inbox",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryData": false,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "node-webhook-inbound",
+      "name": "① 表单/Webhook 接收",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -220,
+        300
+      ],
+      "webhookId": "customer-inbox"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=请作为企业客户服务主管，对以下客户进线内容做意图分析。\n\n客户姓名：{{ $json.body.name || $json.body.customer_name || '未知' }}\n联系方式：{{ $json.body.contact || $json.body.email || '未知' }}\n来源渠道：{{ $json.body.source || '官网表单' }}\n原始内容：\n{{ $json.body.message || $json.body.content || $json.body.text || JSON.stringify($json.body) }}\n\n请输出 JSON，严格包含以下字段：\n- intent：客户真实诉求（一句话概括）\n- sentiment：客户情绪，取值 positive / neutral / negative / angry\n- urgency：紧急程度，取值 low / medium / high / critical\n- expectedAction：希望企业采取的下一步动作",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "你是企业客户成功中心的分析助手。只输出 JSON，不要解释。判断要基于客户原话，不要编造。"
+        }
+      },
+      "id": "node-llm-analyze",
+      "name": "② LLM 需求分析",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        40,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=请把以下客户进线内容，归入且仅归入一个业务分类。\n\n客户原始内容：\n{{ $('① 表单/Webhook 接收').item.json.body.message || $('① 表单/Webhook 接收').item.json.body.content || JSON.stringify($('① 表单/Webhook 接收').item.json.body) }}\n分析结果：{{ $json }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "你是企业工单分类器。分类必须从以下枚举中选一个：sales_inquiry（售前咨询）、after_sales（售后/退换货）、tech_support（技术支持）、billing（账单/付款）、partnership（商务合作）、complaint（投诉）、other（其他）。只输出 JSON。"
+        }
+      },
+      "id": "node-ai-classify",
+      "name": "③ AI 智能分类",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        280,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "attributes": {
+            "intent": {
+              "type": "string",
+              "description": "客户真实诉求一句话概括"
+            },
+            "sentiment": {
+              "type": "string",
+              "description": "情绪：positive/neutral/negative/angry"
+            },
+            "urgency": {
+              "type": "string",
+              "description": "紧急程度：low/medium/high/critical"
+            },
+            "expectedAction": {
+              "type": "string",
+              "description": "希望企业下一步做什么"
+            },
+            "category": {
+              "type": "string",
+              "description": "业务分类：sales_inquiry/after_sales/tech_support/billing/partnership/complaint/other"
+            }
+          }
+        },
+        "format": "json"
+      },
+      "id": "node-structured-output",
+      "name": "结构化结果解析",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.5,
+      "position": [
+        280,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=请用不超过 60 个汉字，为这条客户工单生成一段摘要，便于负责人在飞书通知里快速扫读。\n\n客户：{{ $('① 表单/Webhook 接收').item.json.body.name || '未知' }}\n分类：{{ $json.category }}\n情绪：{{ $json.sentiment }}\n紧急度：{{ $json.urgency }}\n诉求：{{ $json.intent }}\n期望动作：{{ $json.expectedAction }}",
+        "hasOutputParser": false,
+        "options": {
+          "systemMessage": "你是工单摘要撰写人。输出就是摘要正文，不要加前缀、不要加引号、不要换行。"
+        }
+      },
+      "id": "node-llm-summary",
+      "name": "④ 自动生成摘要",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        520,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "ticket_id",
+              "value": "={{ 'TK-' + $now.format('yyyyMMdd') + '-' + $execution.id.toString().slice(-6) }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "customer_name",
+              "value": "={{ $('① 表单/Webhook 接收').item.json.body.name || '未知' }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "contact",
+              "value": "={{ $('① 表单/Webhook 接收').item.json.body.contact || $('① 表单/Webhook 接收').item.json.body.email || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "source",
+              "value": "={{ $('① 表单/Webhook 接收').item.json.body.source || '官网表单' }}",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "raw_message",
+              "value": "={{ $('① 表单/Webhook 接收').item.json.body.message || $('① 表单/Webhook 接收').item.json.body.content || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "a6",
+              "name": "category",
+              "value": "={{ $json.category }}",
+              "type": "string"
+            },
+            {
+              "id": "a7",
+              "name": "intent",
+              "value": "={{ $('③ AI 智能分类').item.json.intent }}",
+              "type": "string"
+            },
+            {
+              "id": "a8",
+              "name": "sentiment",
+              "value": "={{ $('③ AI 智能分类').item.json.sentiment }}",
+              "type": "string"
+            },
+            {
+              "id": "a9",
+              "name": "urgency",
+              "value": "={{ $('③ AI 智能分类').item.json.urgency }}",
+              "type": "string"
+            },
+            {
+              "id": "a10",
+              "name": "summary",
+              "value": "={{ $json.output || $json.text || $json }}",
+              "type": "string"
+            },
+            {
+              "id": "a11",
+              "name": "created_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "a12",
+              "name": "status",
+              "value": "new",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-build-record",
+      "name": "⑤ 生成结构化工单记录",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        760,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $env.FEISHU_BITABLE_APP_TOKEN }}/tables/{{ $env.FEISHU_BITABLE_TABLE_ID }}/records",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"工单号\": $json.ticket_id,\n    \"客户\": $json.customer_name,\n    \"联系方式\": $json.contact,\n    \"来源\": $json.source,\n    \"分类\": $json.category,\n    \"情绪\": $json.sentiment,\n    \"紧急度\": $json.urgency,\n    \"摘要\": $json.summary,\n    \"原始内容\": $json.raw_message,\n    \"状态\": $json.status,\n    \"创建时间\": {{ $now.format('x') }}\n  }\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "node-sync-feishu",
+      "name": "⑥ 同步飞书多维表格",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1000,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.urgency }}",
+              "rightValue": "critical",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-urgency-switch",
+      "name": "紧急度路由",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1000,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=user_id",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"receive_id\": \"{{ $env.FEISHU_OWNER_USER_ID }}\",\n  \"msg_type\": \"interactive\",\n  \"content\": JSON.stringify({\n    config: { wide_screen_mode: true },\n    header: {\n      template: $json.urgency === 'critical' ? 'red' : ($json.urgency === 'high' ? 'orange' : 'blue'),\n      title: { tag: 'plain_text', content: '🚨 新客户工单 ' + $json.ticket_id }\n    },\n    elements: [\n      { tag: 'div', text: { tag: 'lark_md', content: '**分类：**' + $json.category + '\\n**紧急度：**' + $json.urgency + '\\n**情绪：**' + $json.sentiment + '\\n**客户：**' + $json.customer_name + '（' + $json.contact + '）' } },\n      { tag: 'hr' },\n      { tag: 'div', text: { tag: 'lark_md', content: '**AI 摘要：**\\n' + $json.summary } },\n      { tag: 'note', elements: [{ tag: 'plain_text', content: '来源：' + $json.source + ' · 已同步至飞书多维表格' }] }\n    ]\n  })\n}",
+        "options": {}
+      },
+      "id": "node-notify-owner",
+      "name": "⑦ 自动通知负责人",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1240,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 0,\n  \"message\": \"已受理\",\n  \"ticket_id\": $json.ticket_id,\n  \"category\": $json.category,\n  \"summary\": $json.summary\n}",
+        "options": {}
+      },
+      "id": "node-respond",
+      "name": "受理回执",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1240,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "node-chat-model",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        120,
+        -40
+      ]
+    }
+  ],
+  "connections": {
+    "① 表单/Webhook 接收": {
+      "main": [
+        [
+          {
+            "node": "② LLM 需求分析",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "② LLM 需求分析": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "OpenAI Chat Model",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ],
+      "main": [
+        [
+          {
+            "node": "③ AI 智能分类",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "③ AI 智能分类": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "OpenAI Chat Model",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ],
+      "ai_outputParser": [
+        [
+          {
+            "node": "结构化结果解析",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ],
+      "main": [
+        [
+          {
+            "node": "④ 自动生成摘要",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "④ 自动生成摘要": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "OpenAI Chat Model",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ],
+      "main": [
+        [
+          {
+            "node": "⑤ 生成结构化工单记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⑤ 生成结构化工单记录": {
+      "main": [
+        [
+          {
+            "node": "⑥ 同步飞书多维表格",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "紧急度路由",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⑥ 同步飞书多维表格": {
+      "main": [
+        [
+          {
+            "node": "受理回执",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "紧急度路由": {
+      "main": [
+        [
+          {
+            "node": "⑦ 自动通知负责人",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "tags": [
+    {
+      "name": "enterprise-ai"
+    },
+    {
+      "name": "customer-inbox"
+    }
+  ]
+}
