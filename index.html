@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>AI Business Workflow Automation · 在线演示</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+    background: #0f172a; color: #e2e8f0; min-height: 100vh; padding: 20px;
+  }
+  .header { text-align: center; margin-bottom: 20px; }
+  .header h1 { font-size: 26px; color: #fff; }
+  .header p { color: #94a3b8; font-size: 13px; margin-top: 6px; }
+  .badge {
+    display: inline-block; background: #7c3aed; color: #fff;
+    padding: 2px 10px; border-radius: 10px; font-size: 11px; margin-left: 6px;
+  }
+  .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; max-width: 1400px; margin: 0 auto; }
+  .card {
+    background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 20px;
+  }
+  .card h2 { font-size: 15px; color: #fff; margin-bottom: 14px; }
+  label { display: block; font-size: 12px; color: #94a3b8; margin: 10px 0 4px; }
+  input, select, textarea {
+    width: 100%; padding: 9px 11px; background: #0f172a; border: 1px solid #334155;
+    border-radius: 8px; color: #e2e8f0; font-size: 13px; font-family: inherit; outline: none;
+  }
+  input:focus, textarea:focus { border-color: #7c3aed; }
+  textarea { min-height: 90px; resize: vertical; }
+  button {
+    width: 100%; padding: 11px; margin-top: 14px; border: 0; border-radius: 8px;
+    background: linear-gradient(135deg, #7c3aed, #4f46e5); color: #fff;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  button:hover { opacity: .92; }
+  button.ghost {
+    background: #334155; color: #e2e8f0; font-weight: 400; margin-top: 8px;
+  }
+  /* 流水线 */
+  .pipeline { display: flex; flex-direction: column; gap: 10px; }
+  .node {
+    display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: start;
+    padding: 12px; border-radius: 10px; background: #0f172a; border: 1px solid #334155;
+    opacity: .45; transition: all .3s;
+  }
+  .node.active { opacity: 1; border-color: #7c3aed; box-shadow: 0 0 0 1px #7c3aed inset; }
+  .node.done { opacity: 1; border-color: #059669; }
+  .node .icon {
+    width: 36px; height: 36px; border-radius: 8px; background: #334155;
+    display: flex; align-items: center; justify-content: center; font-size: 16px; color: #fff;
+  }
+  .node.active .icon { background: #7c3aed; }
+  .node.done .icon { background: #059669; }
+  .node .title { font-size: 13px; color: #fff; font-weight: 600; }
+  .node .meta { font-size: 12px; color: #94a3b8; margin-top: 3px; min-height: 16px; }
+  .node.done .meta { color: #86efac; }
+  /* 结果卡片 */
+  .result { margin-top: 16px; display: none; }
+  .ticket {
+    background: #fff; color: #0f172a; border-radius: 12px; padding: 18px; margin-bottom: 12px;
+  }
+  .ticket .row { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; margin-bottom: 8px; }
+  .ticket h3 { font-size: 16px; margin-bottom: 8px; }
+  .ticket p { font-size: 13px; line-height: 1.6; color: #334155; }
+  .chip {
+    display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-right: 4px;
+  }
+  .chip-cat { background: #ede9fe; color: #6d28d9; }
+  .chip-low { background: #dbeafe; color: #1d4ed8; }
+  .chip-medium { background: #fef3c7; color: #b45309; }
+  .chip-high { background: #ffedd5; color: #c2410c; }
+  .chip-critical { background: #fee2e2; color: #b91c1c; }
+  .feishu {
+    background: #fff; border-radius: 10px; overflow: hidden; color: #0f172a;
+  }
+  .feishu .fh { padding: 10px 14px; color: #fff; font-weight: 600; font-size: 13px; }
+  .feishu .fb { padding: 12px 14px; font-size: 13px; line-height: 1.7; }
+  .fh-red { background: #dc2626; } .fh-orange { background: #ea580c; } .fh-blue { background: #2563eb; }
+  .divider { border: 0; border-top: 1px solid #e2e8f0; margin: 8px 0; }
+  .spinner {
+    display: inline-block; width: 12px; height: 12px; border: 2px solid #7c3aed;
+    border-top-color: transparent; border-radius: 50%; animation: spin .8s linear infinite;
+    vertical-align: middle; margin-right: 4px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  h2.sec { color: #fff; margin: 18px 0 10px; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>AI Business Workflow Automation <span class="badge">在线演示</span></h1>
+  <p>填表 → Webhook → LLM 分析 → 分类 → 摘要 → 工单 → 飞书通知 · 全流程本地模拟，无需后端</p>
+</div>
+
+<div class="grid">
+  <!-- 左：表单 -->
+  <div class="card">
+    <h2>① 客户进线表单</h2>
+    <label>客户姓名</label>
+    <input id="f-name" value="王磊">
+    <label>公司</label>
+    <input id="f-company" value="杭州明远贸易有限公司">
+    <label>联系方式</label>
+    <input id="f-contact" value="wangl@mingyuan.com">
+    <label>来源渠道</label>
+    <select id="f-source">
+      <option>官网表单</option><option>邮件</option><option>企业微信</option>
+      <option>客服电话</option><option>小程序</option>
+    </select>
+    <label>问题描述</label>
+    <textarea id="f-msg">我们生产线今早九点开始系统直接登不进去了，MES 数据同步全断了！车间 80 多个人在等，这是重大事故！！！</textarea>
+    <button onclick="run()">提交并生成工单</button>
+    <button class="ghost" onclick="loadSample()">🎲 载入一条示例客户</button>
+  </div>
+
+  <!-- 右：流水线 -->
+  <div class="card">
+    <h2>② 自动化流水线（实时）</h2>
+    <div class="pipeline" id="pipe">
+      <div class="node" data-i="0"><div class="icon">📥</div><div><div class="title">Webhook 接收</div><div class="meta">等待进线…</div></div></div>
+      <div class="node" data-i="1"><div class="icon">🧠</div><div><div class="title">LLM 需求分析</div><div class="meta">意图 / 情绪 / 紧急度</div></div></div>
+      <div class="node" data-i="2"><div class="icon">🏷️</div><div><div class="title">AI 智能分类</div><div class="meta">7 类业务自动归口</div></div></div>
+      <div class="node" data-i="3"><div class="icon">✍️</div><div><div class="title">自动生成摘要</div><div class="meta">≤60 字</div></div></div>
+      <div class="node" data-i="4"><div class="icon">🗂️</div><div><div class="title">生成工单记录</div><div class="meta">结构化字段</div></div></div>
+      <div class="node" data-i="5"><div class="icon">🗄️</div><div><div class="title">同步飞书 / 数据库</div><div class="meta">写入多维表格</div></div></div>
+      <div class="node" data-i="6"><div class="icon">🔔</div><div><div class="title">通知负责人</div><div class="meta">飞书卡片按紧急度</div></div></div>
+    </div>
+
+    <div class="result" id="result">
+      <h2 class="sec">生成的工单</h2>
+      <div class="ticket" id="ticket"></div>
+      <h2 class="sec">飞书通知卡片</h2>
+      <div class="feishu" id="feishu"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====== 内嵌 25 条示例（来自 simulation/sample-tickets.json）======
+const SAMPLES = [
+  {name:"王磊",company:"杭州明远贸易",contact:"wangl@mingyuan.com",source:"官网表单",msg:"我们公司有 120 人，想咨询一下你们企业版怎么收费？能不能先开 30 天试用？"},
+  {name:"李思颖",company:"上海澄光设计",contact:"13800001111",source:"邮件",msg:"上周四下单的年度会员，发票至今没收到，财务已经催我第三次了，请今天务必处理。"},
+  {name:"张建国",company:"广州恒锐制造",contact:"zhangjg@hengrui.cn",source:"客服电话",msg:"我们生产线今早九点开始系统直接登不进去了，MES 数据同步全断了！车间 80 多个人在等，这是重大事故！！！"},
+  {name:"刘洋",company:"深圳前海创智",contact:"liuyang@qianhai.ai",source:"官网表单",msg:"我们是做 AI 创业的，看到你们开放平台，想谈一下战略合作和渠道代理，方便约个下周的会吗？"},
+  {name:"赵敏",company:"成都悦居民宿",contact:"13900002222",source:"小程序",msg:"App 昨晚更新之后，订单列表一直转圈加载不出来，客人的预订我都看不到，今天就要退房了，很急！"},
+  {name:"吴强",company:"武汉长江教育",contact:"wuqiang@cjedu.com",source:"客服电话",msg:"我要投诉！你们销售答应给我一周上门培训，结果合同签完就人间蒸发，这已经是第三个人接我电话了！"},
+  {name:"徐军",company:"青岛港口物流",contact:"xujun@qingdao-port.com",source:"邮件",msg:"发票抬头开错了，税号少了一位，已经退回，麻烦重新开一份，财务这周就要归档。"},
+  {name:"高宇",company:"沈阳北方重工",contact:"gaoyu@bfzg.com",source:"客服电话",msg:"我们买的私有化部署版，今早后台报 502，运维已经重启过容器还是不行，远程协助请马上安排。"},
+  {name:"邓超",company:"石家庄燕赵医药",contact:"13600004444",source:"客服电话",msg:"合同写的是 7×24 支持，昨晚出问题打了三小时电话没人接！这种服务态度我要发函投诉到你们总部。"},
+  {name:"宋雨",company:"宁波舟山港供应链",contact:"songyu@zs-port.com",source:"邮件",msg:"你好，我们集团 IT 部想集中采购，年预算大概 80 万，能否给个大客户折扣方案？"},
+];
+
+// ====== 本地规则模拟 AI（演示用，真实部署时由 LLM 节点完成）======
+function analyze(msg) {
+  const m = msg;
+  // 分类
+  let category = "other", catLabel = "其他";
+  if (/投诉|曝光|差评|说法|发函|人间蒸发|服务态度/.test(m)) { category="complaint"; catLabel="投诉"; }
+  else if (/合作|代理|渠道|战略合作|联合案例|代理.*品牌/.test(m)) { category="partnership"; catLabel="商务合作"; }
+  else if (/发票|账单|扣款|报销|付款|多扣|退款|退钱|退订|取消.*会员/.test(m)) { category="billing"; catLabel="账单/付款"; }
+  else if (/登不进|登录不|打不开|报错|崩溃|502|500|宕机|故障|转圈|加载不出来|重启|推送|bug/.test(m)) { category="tech_support"; catLabel="技术支持"; }
+  else if (/退款|退货|退换|取消订单|改套餐|连开.*年.*改/.test(m)) { category="after_sales"; catLabel="售后/退换"; }
+  else if (/价格|收费|多少钱|试用|采购|报价|预算|席位|企业版|个人版|团队版|对比|迁移/.test(m)) { category="sales_inquiry"; catLabel="售前咨询"; }
+  // 紧急度
+  let urgency = "low", urgLabel = "低";
+  if (/重大事故|马上|立刻|紧急|宕机|全断|全停|车间|生产线|三小时|80 多人|今天必须|今天就要/.test(m)) { urgency="critical"; urgLabel="紧急"; }
+  else if (/今天|今天就要|今天务必|这周|财务.*催|很急|催我/.test(m)) { urgency="high"; urgLabel="高"; }
+  else if (/下周|方便约|想了解|咨询一下/.test(m)) { urgency="low"; urgLabel="低"; }
+  else { urgency="medium"; urgLabel="中"; }
+  // 情绪
+  let sentiment = "neutral", sentLabel = "中性";
+  const exclaim = (m.match(/!/g)||[]).length;
+  if (/投诉|曝光|发函|人间蒸发|服务态度|重大/.test(m) || exclaim>=3) { sentiment="angry"; sentLabel="愤怒"; }
+  else if (/急|催|今天务必|今天必须|今天就要/.test(m)) { sentiment="negative"; sentLabel="负面"; }
+  else if (/用得很好|顺手|谢谢|不错/.test(m)) { sentiment="positive"; sentLabel="正面"; }
+  // 意图（截取）
+  const intent = m.length > 40 ? m.slice(0,40)+"…" : m;
+  // 摘要
+  const summary = `客户${intent}（${catLabel}·${urgLabel}紧急·${sentLabel}情绪）`;
+  return { category, catLabel, urgency, urgLabel, sentiment, sentLabel, intent, summary };
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function run() {
+  const name = document.getElementById('f-name').value.trim();
+  const company = document.getElementById('f-company').value.trim();
+  const contact = document.getElementById('f-contact').value.trim();
+  const source = document.getElementById('f-source').value;
+  const msg = document.getElementById('f-msg').value.trim();
+  if (!name || !msg) { alert('请填写客户姓名和问题描述'); return; }
+
+  // 重置 UI
+  document.querySelectorAll('.node').forEach(n => n.className='node');
+  document.getElementById('result').style.display = 'none';
+
+  const nodes = document.querySelectorAll('.node');
+  const a = analyze(msg);
+  const ticketId = 'TK-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(Math.random()*9000+1000);
+
+  // 节点 0: webhook
+  setNode(0, 'active', '<span class="spinner"></span>接收中…');
+  await sleep(500);
+  setNode(0, 'done', `✓ 已收到来自 ${source} 的进线`);
+
+  // 节点 1: LLM 分析
+  setNode(1, 'active', '<span class="spinner"></span>理解客户意图…');
+  await sleep(900);
+  setNode(1, 'done', `意图：${a.intent} · 情绪：${a.sentLabel} · 紧急度：${a.urgLabel}`);
+
+  // 节点 2: 分类
+  setNode(2, 'active', '<span class="spinner"></span>归类业务线…');
+  await sleep(700);
+  setNode(2, 'done', `✓ 归入「${a.catLabel}」（${a.category}）`);
+
+  // 节点 3: 摘要
+  setNode(3, 'active', '<span class="spinner"></span>生成摘要…');
+  await sleep(600);
+  setNode(3, 'done', `✓ ${a.summary}`);
+
+  // 节点 4: 工单
+  setNode(4, 'active', '<span class="spinner"></span>生成工单…');
+  await sleep(500);
+  setNode(4, 'done', `✓ 工单号 ${ticketId}，12 个字段已结构化`);
+
+  // 节点 5: 同步
+  setNode(5, 'active', '<span class="spinner"></span>写入飞书多维表格…');
+  await sleep(600);
+  setNode(5, 'done', '✓ 飞书多维表格新增一行');
+
+  // 节点 6: 通知
+  setNode(6, 'active', '<span class="spinner"></span>推送飞书卡片…');
+  await sleep(500);
+  setNode(6, 'done', `✓ 已 @ 对应负责人（${a.urgLabel==='紧急'?'红色卡片':a.urgLabel==='高'?'橙色卡片':'蓝色卡片'}）`);
+
+  // 渲染结果
+  renderResult({ticketId, name, company, contact, source, msg, ...a});
+}
+
+function setNode(i, state, meta) {
+  const n = document.querySelectorAll('.node')[i];
+  n.className = 'node ' + state;
+  n.querySelector('.meta').innerHTML = meta;
+}
+
+function renderResult(d) {
+  const urgClass = {low:'chip-low', medium:'chip-medium', high:'chip-high', critical:'chip-critical'}[d.urgency];
+  document.getElementById('ticket').innerHTML = `
+    <div class="row"><span>工单 ${d.ticketId}</span><span>${new Date().toLocaleString('zh-CN')}</span></div>
+    <h3>${d.company || d.name}</h3>
+    <div>
+      <span class="chip chip-cat">${d.catLabel}</span>
+      <span class="chip ${urgClass}">${d.urgLabel}紧急</span>
+      <span class="chip chip-low">${d.sentLabel}情绪</span>
+    </div>
+    <hr class="divider">
+    <p><b>联系方式：</b>${d.contact}<br>
+       <b>来源：</b>${d.source}<br>
+       <b>客户原话：</b>${d.msg}<br>
+       <b>AI 摘要：</b>${d.summary}</p>
+  `;
+  const headerCls = d.urgency==='critical' ? 'fh-red' : d.urgency==='high' ? 'fh-orange' : 'fh-blue';
+  const icon = d.urgency==='critical' ? '🚨' : d.urgency==='high' ? '⚠️' : '📬';
+  document.getElementById('feishu').innerHTML = `
+    <div class="fh ${headerCls}">${icon} 新客户工单 ${d.ticketId}</div>
+    <div class="fb">
+      <b>分类：</b>${d.catLabel}　<b>紧急度：</b>${d.urgLabel}　<b>情绪：</b>${d.sentLabel}<br>
+      <b>客户：</b>${d.name}（${d.contact}）<br>
+      <b>公司：</b>${d.company}<br>
+      <hr class="divider">
+      <b>AI 摘要：</b>${d.summary}<br>
+      <hr class="divider">
+      <span style="color:#94a3b8;font-size:12px">来源：${d.source} · 已同步至飞书多维表格</span>
+    </div>
+  `;
+  document.getElementById('result').style.display = 'block';
+}
+
+function loadSample() {
+  const s = SAMPLES[Math.floor(Math.random()*SAMPLES.length)];
+  document.getElementById('f-name').value = s.name;
+  document.getElementById('f-company').value = s.company;
+  document.getElementById('f-contact').value = s.contact;
+  document.getElementById('f-source').value = s.source;
+  document.getElementById('f-msg').value = s.msg;
+}
+</script>
+</body>
+</html>
