@@ -1,5 +1,7 @@
 # AI Business Workflow Automation System
 
+🔗 **[在线演示](https://xingjianlu573-dot.github.io/AI-/demo/)** ｜ **[GitHub 仓库](https://github.com/xingjianlu573-dot/AI-)** ｜ [🇨🇳 国内部署指南](./README_CN.md)
+
 > 一个面向企业场景的 
 >
 > **AI 工作流自动化**
