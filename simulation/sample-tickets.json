@@ -1,0 +1,283 @@
+{
+  "company": "云启科技（虚构演示数据）",
+  "product": "云启协作 SaaS 平台",
+  "generated_at": "2026-10-05",
+  "note": "本文件为演示用模拟数据，用于在 n8n 中批量测试 AI 分类/分析节点的准确率。每条都标注了人工标注的 expected_* 字段，可用来对比 LLM 输出。",
+  "tickets": [
+    {
+      "ticket_id": "TK-20261005-001",
+      "customer_name": "王磊",
+      "company_name": "杭州明远贸易有限公司",
+      "contact": "wangl@mingyuan.com",
+      "source": "官网表单",
+      "message": "你好，我们公司有 120 人，想咨询一下你们企业版怎么收费？能不能先开 30 天试用？",
+      "expected_category": "sales_inquiry",
+      "expected_sentiment": "neutral",
+      "expected_urgency": "low"
+    },
+    {
+      "ticket_id": "TK-20261005-002",
+      "customer_name": "李思颖",
+      "company_name": "上海澄光设计工作室",
+      "contact": "13800001111",
+      "source": "邮件",
+      "message": "上周四下单的年度会员，发票至今没收到，财务已经催我第三次了，请今天务必处理，不然我们没法走报销。",
+      "expected_category": "billing",
+      "expected_sentiment": "negative",
+      "expected_urgency": "high"
+    },
+    {
+      "ticket_id": "TK-20261005-003",
+      "customer_name": "张建国",
+      "company_name": "广州恒锐制造",
+      "contact": "zhangjg@hengrui.cn",
+      "source": "客服电话",
+      "message": "我们生产线今早九点开始系统直接登不进去了，MES 数据同步全断了！车间 80 多个人在等，这是重大事故！！！",
+      "expected_category": "tech_support",
+      "expected_sentiment": "angry",
+      "expected_urgency": "critical"
+    },
+    {
+      "ticket_id": "TK-20261005-004",
+      "customer_name": "陈梦",
+      "company_name": "北京光合营销",
+      "contact": "chenmeng@heguang.com",
+      "source": "企业微信",
+      "message": "用了三个月，整体挺顺手的，想了解下能不能和我们现在用的飞书打通？我们市场部每周要导数据。",
+      "expected_category": "tech_support",
+      "expected_sentiment": "positive",
+      "expected_urgency": "low"
+    },
+    {
+      "ticket_id": "TK-20261005-005",
+      "customer_name": "刘洋",
+      "company_name": "深圳前海创智",
+      "contact": "liuyang@qianhai.ai",
+      "source": "官网表单",
+      "message": "我们是做 AI 创业的，看到你们开放平台，想谈一下战略合作和渠道代理，方便约个下周的会吗？",
+      "expected_category": "partnership",
+      "expected_sentiment": "positive",
+      "expected_urgency": "medium"
+    },
+    {
+      "ticket_id": "TK-20261005-006",
+      "customer_name": "赵敏",
+      "company_name": "成都悦居民宿",
+      "contact": "13900002222",
+      "source": "小程序",
+      "message": "App 昨晚更新之后，订单列表一直转圈加载不出来，客人的预订我都看不到，今天就要退房了，很急！",
+      "expected_category": "tech_support",
+      "expected_sentiment": "angry",
+      "expected_urgency": "critical"
+    },
+    {
+      "ticket_id": "TK-20261005-007",
+      "customer_name": "孙浩",
+      "company_name": "南京蓝湾物流",
+      "contact": "sunhao@lanwan.com",
+      "source": "邮件",
+      "message": "上个月多扣了我们 480 块钱，账单上写的是超量存储，但我们根本没用到那么多，麻烦查一下。",
+      "expected_category": "billing",
+      "expected_sentiment": "negative",
+      "expected_urgency": "medium"
+    },
+    {
+      "ticket_id": "TK-20261005-008",
+      "customer_name": "周婷",
+      "company_name": "苏州优衣库代工厂",
+      "contact": "zhouting@youyichina.cn",
+      "source": "官网表单",
+      "message": "去年买的 50 个账号，现在团队扩到 80 人，想补购 30 个席位，走对公，麻烦销售联系我一下。",
+      "expected_category": "sales_inquiry",
+      "expected_sentiment": "neutral",
+      "expected_urgency": "medium"
+    },
+    {
+      "ticket_id": "TK-20261005-009",
+      "customer_name": "吴强",
+      "company_name": "武汉长江教育",
+      "contact": "wuqiang@cjedu.com",
+      "source": "客服电话",
+      "message": "我要投诉！你们销售答应给我一周上门培训，结果合同签完就人间蒸发，这已经是第三个人接我电话了，我要见你们主管！",
+      "expected_category": "complaint",
+      "expected_sentiment": "angry",
+      "expected_urgency": "critical"
+    },
+    {
+      "ticket_id": "TK-20261005-010",
+      "customer_name": "郑雪",
+      "company_name": "天津港湾贸易",
+      "contact": "zhengxue@gangwan.com",
+      "source": "企业微信",
+      "message": "你好，想问问管理员怎么批量导出过去一年的项目报表？我在设置里翻了半天没找到入口。",
+      "expected_category": "tech_support",
+      "expected_sentiment": "neutral",
+      "expected_urgency": "low"
+    },
+    {
+      "ticket_id": "TK-20261005-011",
+      "customer_name": "冯磊",
+      "company_name": "重庆山城餐饮连锁",
+      "contact": "fenglei@shancheng.cn",
+      "source": "小程序",
+      "message": "上周买的会员想退掉，门店还没开始用，麻烦走一下退款流程，谢谢。",
+      "expected_category": "after_sales",
+      "expected_sentiment": "neutral",
+      "expected_urgency": "medium"
+    },
+    {
+      "ticket_id": "TK-20261005-012",
+      "customer_name": "何静",
+      "company_name": "西安曲江文旅",
+      "contact": "hejing@qujiang.com",
+      "source": "邮件",
+      "message": "用得很好，准备把集团旗下 6 家子公司都迁过来，能不能安排一次线上方案沟通？我们 CIO 想参加。",
+      "expected_category": "sales_inquiry",
+      "expected_sentiment": "positive",
+      "expected_urgency": "medium"
+    },
+    {
+      "ticket_id": "TK-20261005-013",
+      "customer_name": "郭涛",
+      "company_name": "长沙湘江智造",
+      "contact": "guotao@xiangjiang.tech",
+      "source": "官网表单",
+      "message": "我们公司有等保三级要求，想问下你们的数据加密方案和等保认证情况，方便发一份白皮书吗？",
+      "expected_category": "sales_inquiry",
+      "expected_sentiment": "neutral",
+      "expected_urgency": "low"
+    },
+    {
+      "ticket_id": "TK-20261005-014",
+      "customer_name": "马丽",
+      "company_name": "厦门海景酒店",
+      "contact": "13700003333",
+      "source": "客服电话",
+      "message": "订房小程序昨晚崩了两小时，当天入住的客人全是我电话手动安排的，必须给我个说法和补偿方案。",
+      "expected_category": "complaint",
+      "expected_sentiment": "angry",
+      "expected_urgency": "high"
+    },
+    {
+      "ticket_id": "TK-20261005-015",
+      "customer_name": "林峰",
+      "company_name": "合肥科大讯飞外包团队",
+      "contact": "linfeng@hf-outsourcing.com",
+      "source": "企业微信",
+      "message": "你们开放 API 的限流是多少？我们做了个内部机器人，预计每天调用 5 万次，能不能申请提额？",
+      "expected_category": "tech_support",
+      "expected_sentiment": "neutral",
+      "expected_urgency": "medium"
+    },
+    {
+      "ticket_id": "TK-20261005-016",
+      "customer_name": "黄小琳",
+      "company_name": "郑州二七商超",
+      "contact": "huangxl@27mart.com",
+      "source": "官网表单",
+      "message": "我是市场部的，看到你们赞助了行业峰会，想问下能不能申请联合案例曝光？我们愿意出背书。",
+      "expected_category": "partnership",
+      "expected_sentiment": "positive",
+      "expected_urgency": "low"
+    },
+    {
+      "ticket_id": "TK-20261005-017",
+      "customer_name": "徐军",
+      "company_name": "青岛港口物流",
+      "contact": "xujun@qingdao-port.com",
+      "source": "邮件",
+      "message": "发票抬头开错了，税号少了一位，已经退回，麻烦重新开一份，财务这周就要归档。",
+      "expected_category": "billing",
+      "expected_sentiment": "negative",
+      "expected_urgency": "high"
+    },
+    {
+      "ticket_id": "TK-20261005-018",
+      "customer_name": "高宇",
+      "company_name": "沈阳北方重工",
+      "contact": "gaoyu@bfzg.com",
+      "source": "客服电话",
+      "message": "我们买的私有化部署版，今早后台报 502，运维已经重启过容器还是不行，远程协助请马上安排。",
+      "expected_category": "tech_support",
+      "expected_sentiment": "angry",
+      "expected_urgency": "critical"
+    },
+    {
+      "ticket_id": "TK-20261005-019",
+      "customer_name": "林心如",
+      "company_name": "昆明春城花店",
+      "contact": "linxr@chunflower.com",
+      "source": "小程序",
+      "message": "不小心点错了连开三年，其实我们只要一年，能不能帮忙改一下套餐？",
+      "expected_category": "after_sales",
+      "expected_sentiment": "neutral",
+      "expected_urgency": "low"
+    },
+    {
+      "ticket_id": "TK-20261005-020",
+      "customer_name": "何大伟",
+      "company_name": "佛山顺德家电",
+      "contact": "hedw@shunde.com",
+      "source": "官网表单",
+      "message": "你们和钉钉哪个更适合 500 人制造企业？我们现在用钉钉，迁移成本高吗？",
+      "expected_category": "sales_inquiry",
+      "expected_sentiment": "neutral",
+      "expected_urgency": "low"
+    },
+    {
+      "ticket_id": "TK-20261005-021",
+      "customer_name": "曹阳",
+      "company_name": "东莞长安电子",
+      "contact": "caoyang@changan-elec.com",
+      "source": "企业微信",
+      "message": "你们手机端 App 最近推送有问题，明明设置了消息提醒但完全收不到，已经影响夜班排班了。",
+      "expected_category": "tech_support",
+      "expected_sentiment": "negative",
+      "expected_urgency": "high"
+    },
+    {
+      "ticket_id": "TK-20261005-022",
+      "customer_name": "宋雨",
+      "company_name": "宁波舟山港供应链",
+      "contact": "songyu@zs-port.com",
+      "source": "邮件",
+      "message": "你好，我们集团 IT 部想集中采购，年预算大概 80 万，能否给个大客户折扣方案？",
+      "expected_category": "sales_inquiry",
+      "expected_sentiment": "neutral",
+      "expected_urgency": "medium"
+    },
+    {
+      "ticket_id": "TK-20261005-023",
+      "customer_name": "邓超",
+      "company_name": "石家庄燕赵医药",
+      "contact": "13600004444",
+      "source": "客服电话",
+      "message": "合同写的是 7×24 支持，昨晚出问题打了三小时电话没人接！这种服务态度我要发函投诉到你们总部。",
+      "expected_category": "complaint",
+      "expected_sentiment": "angry",
+      "expected_urgency": "critical"
+    },
+    {
+      "ticket_id": "TK-20261005-024",
+      "customer_name": "蒋雯",
+      "company_name": "福州闽江文创",
+      "contact": "jiangwen@minjiang.cn",
+      "source": "小程序",
+      "message": "我就是想问下，个人版和团队版有什么区别？我一个人做设计够不够用？",
+      "expected_category": "sales_inquiry",
+      "expected_sentiment": "positive",
+      "expected_urgency": "low"
+    },
+    {
+      "ticket_id": "TK-20261005-025",
+      "customer_name": "沈括",
+      "company_name": "贵阳大数据交易所",
+      "contact": "shenkuo@gzbdex.com",
+      "source": "官网表单",
+      "message": "你们数据存在哪个 region？我们有数据出境合规要求，想确认下节点位置和备份策略。",
+      "expected_category": "tech_support",
+      "expected_sentiment": "neutral",
+      "expected_urgency": "medium"
+    }
+  ]
+}
