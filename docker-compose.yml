@@ -1,0 +1,39 @@
+# AI Business Workflow Automation System - 一键启动 n8n
+# 国内用户：在 /etc/docker/daemon.json（Linux）或 Docker Desktop 设置里加国内镜像加速器后再 up
+# 用法：cp .env.example .env && docker compose up -d
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    # 国内拉不动镜像时，可临时改成你自己的镜像加速地址，例如：
+    # image: registry.cn-hangzhou.aliyuncs.com/your-namespace/n8n:latest
+    container_name: ai-business-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
+      - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678/}
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-Asia/Shanghai}
+      - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH_ACTIVE:-true}
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD:-change-me-please}
+      # 让 n8n 启动时自动导入本仓库 workflows/ 下的工作流
+      - N8N_DIAGNOSTICS_ENABLED=false
+      # 把当前选中的模型 provider 透传给 n8n（节点里手动引用即可）
+      - MODEL_PROVIDER=${MODEL_PROVIDER:-deepseek}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      # 自动导入工作流（只读挂载，容器内不会改）
+      - ./workflows:/workflows:ro
+      # 把 .env 挂进去，方便节点里用 {{$env.XXX}}
+      - ./.env:/home/node/.env:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  n8n_data:
