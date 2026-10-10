@@ -56,9 +56,10 @@ def main():
         sys.exit(1)
 
     cfg = PROVIDERS[provider]
-    api_key = os.environ.get(cfg["key_env"], "").strip()
-    model = os.environ.get(f"{provider.upper()}_MODEL", cfg["model"])
-    base_url = os.environ.get(f"{provider.upper()}_BASE_URL", cfg["base_url"]).rstrip("/")
+    # 优先读工作流直通三变量（OPENAI_* / LLM_MODEL），未设置时才回退到各家变量
+    api_key = os.environ.get("OPENAI_API_KEY", "").strip() or os.environ.get(cfg["key_env"], "").strip()
+    model = os.environ.get("LLM_MODEL", "").strip() or os.environ.get(f"{provider.upper()}_MODEL", cfg["model"])
+    base_url = os.environ.get("OPENAI_BASE_URL", "").strip() or os.environ.get(f"{provider.upper()}_BASE_URL", cfg["base_url"]).rstrip("/")
 
     print(f"==> Provider: {provider}")
     print(f"    Base URL : {base_url}")

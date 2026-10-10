@@ -1,0 +1,33 @@
+{
+  "schema_version": "1",
+  "source_path": "C:\\Users\\ZhuanZ\\Doubao\\chats\\2026-10-05\\new-chat-3\\index.html",
+  "source_filename": "index.html",
+  "source_hash": "3ec42dd3da5f",
+  "source_size_bytes": 21442,
+  "kind": "html",
+  "rendered_at_utc": "2026-10-10T13:34:24+00:00",
+  "output_dir": "C:\\Users\\ZhuanZ\\Doubao\\chats\\2026-10-05\\new-chat-3\\.preview\\3ec42dd3da5f",
+  "page_count": 1,
+  "rendered_page_count": 0,
+  "collage_count": 0,
+  "extracted_text_chars": 17553,
+  "text_relpath": "text.md",
+  "thumbnail_relpath": null,
+  "pages": [],
+  "collages": [],
+  "warnings": [
+    "html render: png slice failed: No module named 'PIL'"
+  ],
+  "options": {
+    "max_pages": 12,
+    "collage": true,
+    "page_range": null,
+    "thumbnail": true,
+    "text_only": false,
+    "jpeg_quality": 85,
+    "out_max_dim": 2048
+  },
+  "summary": {
+    "bytes": 21442
+  }
+}

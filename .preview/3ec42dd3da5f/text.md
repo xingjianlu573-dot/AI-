@@ -190,18 +190,18 @@ function analyze(msg) {
   else if (/登不进|登录不|打不开|报错|崩溃|502|500|宕机|故障|转圈|加载不出来|重启|推送|bug/.test(m)) { category="tech_support"; catLabel="技术支持"; }
   else if (/退款|退货|退换|取消订单|改套餐/.test(m)) { category="after_sales"; catLabel="售后/退换"; }
   else if (/价格|收费|多少钱|试用|采购|报价|预算|席位|企业版|个人版|团队版|对比|迁移|折扣/.test(m)) { category="sales_inquiry"; catLabel="售前咨询"; }
-  let urgency = "low", urgLabel = "低紧急";
+  let urgency = "low", urgLabel = "低";
   if (/重大事故|马上|立刻|紧急|宕机|全断|全停|车间|生产线|三小时|80 多人|今天必须|今天就要/.test(m)) { urgency="critical"; urgLabel="紧急"; }
-  else if (/今天|今天就要|今天务必|这周|财务.*催|很急|催我/.test(m)) { urgency="high"; urgLabel="高紧急"; }
-  else if (/下周|方便约|想了解|咨询一下/.test(m)) { urgency="low"; urgLabel="低紧急"; }
-  else { urgency="medium"; urgLabel="中紧急"; }
+  else if (/今天|今天就要|今天务必|这周|财务.*催|很急|催我/.test(m)) { urgency="high"; urgLabel="高"; }
+  else if (/下周|方便约|想了解|咨询一下/.test(m)) { urgency="low"; urgLabel="低"; }
+  else { urgency="medium"; urgLabel="中"; }
   let sentiment = "neutral", sentLabel = "中性";
   const exclaim = (m.match(/!/g)||[]).length;
   if (/投诉|曝光|发函|人间蒸发|服务态度|重大/.test(m) || exclaim>=3) { sentiment="angry"; sentLabel="愤怒"; }
   else if (/急|催|今天务必|今天必须|今天就要/.test(m)) { sentiment="negative"; sentLabel="负面"; }
   else if (/用得很好|顺手|谢谢|不错/.test(m)) { sentiment="positive"; sentLabel="正面"; }
   const intent = m.length > 40 ? m.slice(0,40)+"…" : m;
-  const summary = `客户${intent}（${catLabel}·${urgLabel}·${sentLabel}情绪）`;
+  const summary = `客户${intent}（${catLabel}·${urgLabel}紧急·${sentLabel}情绪）`;
   return { category, catLabel, urgency, urgLabel, sentiment, sentLabel, intent, summary };
 }
 
@@ -279,7 +279,7 @@ async function run() {
 
   setNode(8, 'active', '<span class="spinner"></span>推送飞书卡片…');
   await sleep(450);
-  setNode(8, 'done', `✓ 已 @ 责任团队（${a.urgLabel==='紧急'?'红色卡片':a.urgLabel==='高紧急'?'橙色卡片':'蓝色卡片'}）`);
+  setNode(8, 'done', `✓ 已 @ 责任团队（${a.urgLabel==='紧急'?'红色卡片':a.urgLabel==='高'?'橙色卡片':'蓝色卡片'}）`);
 
   renderResult({ticketId, name, company, contact, source, msg, ...a, kbHits, sla:s});
 }
@@ -307,7 +307,7 @@ function renderResult(d) {
     <h3>${d.company || d.name}</h3>
     <div>
       <span class="chip chip-cat">${d.catLabel}</span>
-      <span class="chip ${urgClass}">${d.urgLabel}</span>
+      <span class="chip ${urgClass}">${d.urgLabel}紧急</span>
       <span class="chip chip-low">${d.sentLabel}情绪</span>
       <span class="chip ${pClass}">SLA ${d.sla.level}</span>
       <span class="chip chip-p4">${d.sla.time} 响应</span>

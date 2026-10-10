@@ -110,7 +110,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=请用不超过 60 个汉字，为这条客户工单生成一段摘要，便于负责人在飞书通知里快速扫读。\n\n客户：{{ $('① 表单/Webhook 接收').item.json.body.name || '未知' }}\n分类：{{ $json.category }}\n情绪：{{ $json.sentiment }}\n紧急度：{{ $json.urgency }}\n诉求：{{ $json.intent }}\n期望动作：{{ $json.expectedAction }}\n\n知识库检索到的相关政策片段（可用于澄清或补充背景，不要照抄）：\n{{ $('知识库检索（RAG）').item.json.top_k ? $('知识库检索（RAG）').item.json.top_k.map(x => x.content).join('；').slice(0, 300) : '无' }}\n\n输出就是摘要正文，不要加前缀。",
+        "text": "=请用不超过 60 个汉字，为这条客户工单生成一段摘要，便于负责人在飞书通知里快速扫读。\n\n客户：{{ $('① 表单/Webhook 接收').first().json.body.name || '未知' }}\n分类：{{ $json.category }}\n情绪：{{ $json.sentiment }}\n紧急度：{{ $json.urgency }}\n诉求：{{ $json.intent }}\n期望动作：{{ $json.expectedAction }}\n\n知识库检索到的相关政策片段（仅作背景参考，不要照抄）：\n{{ ($('知识库检索（RAG）').first()?.json?.top_k || []).map(x => x.content).join('；').slice(0, 300) || '无' }}\n\n输出就是摘要正文，不要加前缀。",
         "hasOutputParser": false,
         "options": {
           "systemMessage": "你是工单摘要撰写人。输出就是摘要正文，不要加前缀、不要加引号、不要换行。"
@@ -298,7 +298,7 @@
     },
     {
       "parameters": {
-        "model": "gpt-4o-mini",
+        "model": "={{ $env.LLM_MODEL || 'gpt-4o-mini' }}",
         "options": {
           "temperature": 0.1
         }
@@ -314,7 +314,7 @@
     },
     {
       "parameters": {
-        "model": "={{ $env.OPENAI_MODEL || 'gpt-4o-mini' }}",
+        "model": "={{ $env.LLM_MODEL || 'gpt-4o-mini' }}",
         "options": {
           "temperature": 0.4
         }
@@ -351,7 +351,8 @@
       "position": [
         520,
         300
-      ]
+      ],
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -452,11 +453,6 @@
       "main": [
         [
           {
-            "node": "⑥ 同步飞书多维表格",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "SLA 矩阵（28 组合）",
             "type": "main",
             "index": 0
@@ -489,6 +485,11 @@
     "SLA 矩阵（28 组合）": {
       "main": [
         [
+          {
+            "node": "⑥ 同步飞书多维表格",
+            "type": "main",
+            "index": 0
+          },
           {
             "node": "⑦ 自动通知负责人",
             "type": "main",

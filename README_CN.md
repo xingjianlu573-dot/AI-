@@ -51,8 +51,8 @@ Settings → Docker Engine → 在 JSON 里加：
 ### 1.2 启动
 
 ```bash
-git clone https://github.com/xingjianlu573-dot/AI-.git
-cd AI-
+git clone https://github.com/xingjianlu573-dot/AI.git
+cd AI
 cp .env.example .env
 # 编辑 .env，至少填一个国产模型的 API Key + 飞书凭据
 docker compose up -d
@@ -60,7 +60,7 @@ docker compose up -d
 
 打开 http://localhost:5678 ，用 `.env` 里的账号密码登录。
 
-工作流已经通过 `./workflows:/workflows:ro` 挂载自动导入，直接在 n8n 里激活即可。
+工作流由 compose 里的 `n8n-import` 一次性容器自动导入（首次 `docker compose up -d` 时执行 `n8n import:workflow`，已导入过会自动跳过，不会重复），直接在 n8n 里激活即可。
 
 ---
 
@@ -81,8 +81,8 @@ EOF
 sudo systemctl restart docker
 
 # 3) 拉代码、起服务
-git clone https://github.com/xingjianlu573-dot/AI-.git
-cd AI-
+git clone https://github.com/xingjianlu573-dot/AI.git
+cd AI
 cp .env.example .env
 # 改 .env：
 #   N8N_HOST=你的服务器公网IP或域名
@@ -125,9 +125,12 @@ n8n start
 | **智谱 GLM** | `MODEL_PROVIDER=zhipu` | https://open.bigmodel.cn/ | 有免费额度 |
 | **月之暗面 Kimi** | `MODEL_PROVIDER=moonshot` | https://platform.moonshot.cn/ | 长文本强 |
 
-四家都是 **OpenAI 兼容协议**，所以 n8n 里的 OpenAI 节点只需要改两个地方：
-- **Credential → Base URL**：填 `.env` 里对应 `*_BASE_URL`
-- **Model**：填对应 `*_MODEL`
+四家都是 **OpenAI 兼容协议**，所以 n8n 里的 OpenAI 节点只需要改一个地方：
+- **Credential → Base URL**：填 `.env` 里对应 `*_BASE_URL`（或填表达式 `{{ $env.OPENAI_BASE_URL }}`）
+- **Model**：工作流已内嵌 `$env.LLM_MODEL` 表达式，**不用在节点里改**，直接在 `.env` 设 `LLM_MODEL` 即可（默认 `deepseek-chat`）
+- **API Key**：填表达式 `{{ $env.OPENAI_API_KEY }}` 或直接粘 key
+
+切模型 = 改 `.env` 三行：`MODEL_PROVIDER`、`LLM_MODEL`、`OPENAI_BASE_URL`（+ 对应 API Key），全程不用碰工作流。
 
 ### 一键验证连通性
 
@@ -181,13 +184,13 @@ A：① 应用没开通 `bitable:app` 权限；② 多维表格没把应用加�
 A：检查 `im:message` 权限和 `receive_id_type=user_id` 是否对应。
 
 **Q5：GitHub clone 慢怎么办？**
-A：用 `https://ghproxy.com/https://github.com/xingjianlu573-dot/AI-.git` 这种加速镜像，或者直接在 GitHub 网页上 Download ZIP。
+A：用 `https://ghproxy.com/https://github.com/xingjianlu573-dot/AI.git` 这种加速镜像，或者直接在 GitHub 网页上 Download ZIP。
 
 **Q6：n8n 工作流里为什么还要手动填一次 Base URL？**
-A：n8n 的 OpenAI Credential 是存数据库的，不会自动读 `.env`。第一次配置时按 `.env` 里的 `*_BASE_URL` 填一次即可，之后换 provider 再改 Credential。
+A：n8n 的 OpenAI Credential 是存数据库的，不会自动读 `.env`。第一次配置时把 Credential 的 Base URL 填 `{{ $env.OPENAI_BASE_URL }}`、API Key 填 `{{ $env.OPENAI_API_KEY }}` 即可，之后换 provider 只改 `.env`。
 
 **Q7：想换成本地开源模型（Ollama）？**
-A：把 `MODEL_PROVIDER=openai`，`OPENAI_BASE_URL=http://host.docker.internal:11434/v1`，`OPENAI_MODEL=qwen2.5`，n8n 的 OpenAI 节点就能直连本机 Ollama。
+A：把 `MODEL_PROVIDER=openai`，`OPENAI_BASE_URL=http://host.docker.internal:11434/v1`，`LLM_MODEL=qwen2.5`，n8n 的 OpenAI 节点就能直连本机 Ollama。
 
 ---
 

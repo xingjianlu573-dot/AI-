@@ -1,0 +1,43 @@
+{
+  "schema_version": "1",
+  "source_path": "C:\\Users\\ZhuanZ\\Doubao\\chats\\2026-10-05\\new-chat-3\\assets\\workflow-overview.png",
+  "source_filename": "workflow-overview.png",
+  "source_hash": "1aa63fb026a3",
+  "source_size_bytes": 260845,
+  "kind": "image",
+  "rendered_at_utc": "2026-10-10T13:36:50+00:00",
+  "output_dir": "C:\\Users\\ZhuanZ\\Doubao\\chats\\2026-10-05\\new-chat-3\\.preview\\1aa63fb026a3",
+  "page_count": 1,
+  "rendered_page_count": 1,
+  "collage_count": 0,
+  "extracted_text_chars": 0,
+  "text_relpath": null,
+  "thumbnail_relpath": null,
+  "pages": [
+    {
+      "page": 1,
+      "relpath": "pages\\p001.png",
+      "size_bytes": 260845,
+      "width": 0,
+      "height": 0
+    }
+  ],
+  "collages": [],
+  "warnings": [
+    "image probe failed: No module named 'PIL'",
+    "Pillow unavailable for thumbnail",
+    "Pillow unavailable: No module named 'PIL'"
+  ],
+  "options": {
+    "max_pages": 12,
+    "collage": true,
+    "page_range": null,
+    "thumbnail": true,
+    "text_only": false,
+    "jpeg_quality": 85,
+    "out_max_dim": 2048
+  },
+  "summary": {
+    "dimensions": "unknown"
+  }
+}

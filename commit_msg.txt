@@ -1,0 +1,9 @@
+fix: 用户角度实测回归（2026-10-10）
+
+- 修复 LLM_MODEL 环境变量缺口：.env.example 新增直通三变量（LLM_MODEL/OPENAI_BASE_URL/OPENAI_API_KEY），test_ai_provider.py 优先读取，README_CN 模型章节同步
+- 修复仓库重命名链接：README/README_CN 中 6 处旧名 AI- 更新为 AI
+- 修复 docker-compose 自动导入承诺：新增 n8n-import 一次性容器（n8n 不会自动扫描挂载目录，必须显式 import:workflow；list:workflow 判空防重复）
+- 修复演示页摘要/工单卡片“紧急紧急”重复 bug，卡片颜色判断同步
+- 重绘工作流总览图为 9 阶段版（含 RAG/SLA/双模型），修复节点出画布截断
+- docs/nodes.md 重写为 13 节点+error-handler+分温度策略；business-value.md/test-report.md 同步
+- 新增 check_js_syntax.py（esprima 校验）、check_env_consistency.py（env 引用核对）
