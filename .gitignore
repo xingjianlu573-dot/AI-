@@ -17,3 +17,8 @@ venv/
 # Env
 .env
 .env.local
+
+# HTML self-check & backups
+_shots/
+_backup/
+

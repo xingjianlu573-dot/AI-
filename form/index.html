@@ -2,55 +2,169 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>云启科技 · 客户进线受理</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>客户进线受理 · AI 自动处理</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%237C3AED'/%3E%3Cpath d='M20 44V20l8 10 8-10v24' stroke='white' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#0f172a; --panel:#1e293b; --line:#334155; --text:#e2e8f0; --dim:#94a3b8;
+    --accent:#7c3aed; --accent2:#4f46e5; --ok:#059669; --err:#ef4444;
+  }
   body {
-    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh; padding: 40px 16px;
+    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6;
   }
-  .wrap { max-width: 640px; margin: 0 auto; }
+  a { color: #c4b5fd; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ===== 顶部导航 ===== */
+  nav {
+    position: sticky; top: 0; z-index: 50; background: rgba(15,23,42,.92); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 18px;
+    padding: 12px 24px; flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: #fff; font-size: 15px; }
+  .brand svg { width: 26px; height: 26px; }
+  .nav-links { display: flex; align-items: center; gap: 12px; margin-left: auto; flex-wrap: wrap; }
+  .nav-links a { color: var(--dim); font-size: 13px; padding: 6px 4px; }
+  .nav-links a:hover { color: #fff; text-decoration: none; }
+  @media (max-width: 640px) { .nav-links a { min-height: 44px; display: inline-flex; align-items: center; } }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px;
+    border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 0;
+    transition: opacity .2s; min-height: 36px;
+  }
+  @media (max-width: 640px) { .btn { min-height: 44px; } }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+  .btn-primary:hover { opacity: .9; text-decoration: none; }
+  .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  .btn-ghost:hover { border-color: var(--accent); text-decoration: none; }
+
+  /* ===== 页面主体 ===== */
+  .wrap { max-width: 760px; margin: 0 auto; padding: 36px 20px 60px; }
+  .page-head { text-align: center; margin-bottom: 28px; }
+  .page-head h1 { font-size: 26px; color: #fff; }
+  .page-head p { color: var(--dim); font-size: 14px; margin-top: 8px; }
+  .badge {
+    display: inline-block; background: #7c3aed; color: #fff;
+    padding: 2px 10px; border-radius: 10px; font-size: 11px; margin-left: 6px; vertical-align: middle;
+  }
+
+  /* ===== 处理流程步骤条 ===== */
+  .flowbar {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 14px; margin-bottom: 22px;
+  }
+  .flowbar .fs { text-align: center; }
+  .flowbar .fs .ic {
+    width: 34px; height: 34px; margin: 0 auto 6px; border-radius: 8px; background: #26334d;
+    display: flex; align-items: center; justify-content: center; font-size: 15px;
+  }
+  .flowbar .fs .tt { font-size: 12.5px; color: var(--dim); }
+  .flowbar .fs .tt b { display: block; color: var(--text); font-weight: 600; }
+  .flowbar .arr { display: flex; align-items: center; justify-content: center; color: #475569; font-size: 14px; }
+  .flowbar .more { grid-column: 1 / -1; text-align: center; font-size: 12.5px; color: #64748b; }
+
+  /* ===== 表单卡片 ===== */
   .card {
-    background: #fff; border-radius: 16px; padding: 36px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 28px;
   }
-  h1 { font-size: 22px; color: #111; margin-bottom: 6px; }
-  .sub { color: #666; font-size: 13px; margin-bottom: 24px; }
-  label { display: block; font-size: 13px; color: #333; margin: 14px 0 6px; font-weight: 600; }
+  label { display: block; font-size: 13px; color: var(--dim); margin: 14px 0 6px; font-weight: 600; }
   input, select, textarea {
-    width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px;
-    font-size: 14px; font-family: inherit; outline: none; transition: border .2s;
+    width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--line);
+    border-radius: 8px; color: var(--text); font-size: 14px; font-family: inherit; outline: none;
+    transition: border .2s;
   }
-  input:focus, select:focus, textarea:focus { border-color: #667eea; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
   textarea { min-height: 110px; resize: vertical; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  button {
-    width: 100%; margin-top: 22px; padding: 12px; border: 0; border-radius: 8px;
-    background: linear-gradient(135deg, #667eea, #764ba2); color: #fff;
-    font-size: 15px; font-weight: 600; cursor: pointer;
+  button.primary {
+    width: 100%; margin-top: 24px; padding: 13px; border: 0; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
+    font-size: 15px; font-weight: 600; cursor: pointer; min-height: 44px;
   }
+  button.primary:hover { opacity: .92; }
   button.ghost {
-    background: #f3f4f6; color: #374151; margin-top: 10px; font-weight: 500;
+    width: 100%; background: var(--line); color: var(--text); margin-top: 10px; font-weight: 400;
+    padding: 11px; border: 0; border-radius: 8px; font-size: 13px; cursor: pointer;
   }
+  button.ghost:hover { background: #475569; }
   #result {
     margin-top: 18px; padding: 14px; border-radius: 8px; font-size: 13px;
     display: none; white-space: pre-wrap; word-break: break-all;
   }
-  .ok { background: #dcfce7; color: #166534; display: block; }
-  .err { background: #fee2e2; color: #991b1b; display: block; }
-  .badge {
-    display: inline-block; background: #ede9fe; color: #6d28d9;
-    padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 6px;
+  .ok { background: #065f46; color: #a7f3d0; display: block; }
+  .err { background: #7f1d1d; color: #fecaca; display: block; }
+
+  /* ===== 底部 CTA ===== */
+  .cta-band {
+    margin-top: 30px; text-align: center; padding: 30px 20px;
+    background: linear-gradient(135deg, rgba(124,58,237,.16), rgba(79,70,229,.10));
+    border: 1px solid var(--line); border-radius: 14px;
+  }
+  .cta-band h2 { font-size: 18px; color: #fff; }
+  .cta-band p { color: var(--dim); font-size: 13px; margin: 8px 0 16px; }
+  .cta-band .btn { font-size: 14px; padding: 11px 22px; }
+  footer { text-align: center; padding: 22px; color: #475569; font-size: 12px; }
+  footer a { color: #94a3b8; }
+
+  @media (max-width: 640px) {
+    .row { grid-template-columns: 1fr; }
+    .flowbar { grid-template-columns: repeat(3, 1fr); }
+    .nav-links { margin-left: 0; width: 100%; justify-content: flex-start; }
+    .card { padding: 20px; }
+    input, select, textarea { font-size: 16px; }
+    body { font-size: 16px; }
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="card">
-    <h1>云启科技 · 客户进线受理 <span class="badge">AI 自动处理中</span></h1>
-    <div class="sub">提交后由 AI 自动分析、分类、生成工单，并通知对应负责人。</div>
 
+<nav>
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 12 4 20"/><circle cx="12" cy="12" r="3"/>
+    </svg>
+    AI Workflow Automation
+  </div>
+  <div class="nav-links">
+    <a class="btn btn-ghost" href="../index.html">返回在线演示</a>
+    <a class="btn btn-primary" href="../index.html">查看完整流水线</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="page-head">
+    <h1>客户进线受理 <span class="badge">AI 自动处理中</span></h1>
+    <p>提交后由 AI 自动分析、分类、检索知识库、生成摘要、按 SLA 路由，并同步飞书、通知负责人。</p>
+  </div>
+
+  <!-- ===== 处理流程速览（新增）===== -->
+  <div class="flowbar">
+    <div class="fs"><div class="ic">📥</div><div class="tt"><b>接收</b>Webhook</div></div>
+    <div class="arr">→</div>
+    <div class="fs"><div class="ic">🧠</div><div class="tt"><b>分析</b>意图/情绪/紧急度</div></div>
+    <div class="arr">→</div>
+    <div class="fs"><div class="ic">🏷️</div><div class="tt"><b>分类</b>7 类业务</div></div>
+    <div class="arr">→</div>
+    <div class="fs"><div class="ic">📚</div><div class="tt"><b>RAG</b>知识库检索</div></div>
+    <div class="arr">→</div>
+    <div class="fs"><div class="ic">✍️</div><div class="tt"><b>摘要</b>≤60 字</div></div>
+    <div class="arr">→</div>
+    <div class="fs"><div class="ic">🗂️</div><div class="tt"><b>工单</b>结构化</div></div>
+    <div class="arr">→</div>
+    <div class="fs"><div class="ic">⏱️</div><div class="tt"><b>SLA</b>28 组合</div></div>
+    <div class="arr">→</div>
+    <div class="fs"><div class="ic">🗄️</div><div class="tt"><b>同步</b>飞书/数据库</div></div>
+    <div class="arr">→</div>
+    <div class="fs"><div class="ic">🔔</div><div class="tt"><b>通知</b>负责人</div></div>
+    <div class="more">部署到 n8n 后即真实生效：表单 → Webhook → LLM → 分类 → RAG → 摘要 → 工单 → SLA → 飞书</div>
+  </div>
+
+  <!-- ===== 表单（原功能完整保留）===== -->
+  <div class="card">
     <form id="f">
       <div class="row">
         <div>
@@ -81,13 +195,25 @@
       <label>问题描述 *</label>
       <textarea name="message" required placeholder="请描述您遇到的问题或需求…"></textarea>
 
-      <button type="submit">提交并生成工单</button>
-      <button type="button" class="ghost" onclick="loadSample()">🎲 载入一条模拟客户（演示用）</button>
+      <button type="submit" class="primary">提交并生成工单</button>
+      <button type="button" class="ghost" onclick="loadSample()">载入一条模拟客户（演示用）</button>
     </form>
 
     <div id="result"></div>
   </div>
+
+  <!-- ===== 互通 CTA（新增）===== -->
+  <div class="cta-band">
+    <h2>想看这条进线被 AI 怎么处理？</h2>
+    <p>到在线演示页提交一条，完整观看 9 节点流水线：分析 → 分类 → RAG → 摘要 → SLA → 飞书卡片。</p>
+    <a class="btn btn-primary" href="../index.html">去在线演示页</a>
+  </div>
 </div>
+
+<footer>
+  AI Business Workflow Automation · 企业客户进线智能受理
+  <br><a href="../README_CN.md">国内部署指南</a> · <a href="../docs/nodes.md">节点说明</a> · <a href="../docs/business-value.md">业务价值</a>
+</footer>
 
 <script>
 // 部署到 n8n 后，把这里改成你的 Webhook 地址
@@ -105,11 +231,11 @@ document.getElementById('f').addEventListener('submit', async (e) => {
     });
     const text = await resp.text();
     r.className = 'ok';
-    r.textContent = '✅ 已受理\n' + text;
+    r.textContent = '已受理\n' + text;
   } catch (err) {
     r.className = 'err';
-    r.textContent = '❌ 请求失败：' + err.message +
-      '\n（本地演示模式下，n8n 未启动时会报这个错，属正常现象）';
+    r.textContent = '请求失败：' + err.message +
+      '\n（本地演示模式下，n8n 未启动时会报这个错，属正常现象。可去「在线演示页」查看完整模拟流程）';
   }
 });
 
@@ -129,7 +255,7 @@ async function loadSample() {
     r.textContent = '已载入模拟数据（人工标注分类：' + t.expected_category +
       '，紧急度：' + t.expected_urgency + '）\n提交后可对比 AI 输出是否一致。';
   } catch (e) {
-    alert('请通过本地 HTTP 服务打开本页面（例如 npx serve），或手动在 simulation/sample-tickets.json 里复制一条。');
+    alert('请通过本地 HTTP 服务打开本页面，或手动在 simulation/sample-tickets.json 里复制一条。');
   }
 }
 </script>
