@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Business Workflow Automation · 企业客户进线智能受理</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%237C3AED'/%3E%3Cpath d='M20 44V20l8 10 8-10v24' stroke='white' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#0f172a; --panel:#1e293b; --line:#334155; --text:#e2e8f0; --dim:#94a3b8;
+    --accent:#7c3aed; --accent2:#4f46e5; --ok:#059669; --warn:#f59e0b; --err:#ef4444;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6;
+  }
+  a { color: #c4b5fd; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ===== 顶部导航 ===== */
+  nav {
+    position: sticky; top: 0; z-index: 50; background: rgba(15,23,42,.92); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 18px;
+    padding: 12px 24px; flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: #fff; font-size: 15px; }
+  .brand svg { width: 26px; height: 26px; }
+  .nav-links { display: flex; align-items: center; gap: 14px; margin-left: auto; flex-wrap: wrap; }
+  .nav-links a { color: var(--dim); font-size: 13px; padding: 6px 4px; }
+  .nav-links a:hover { color: #fff; text-decoration: none; }
+  @media (max-width: 640px) { .nav-links a { min-height: 44px; display: inline-flex; align-items: center; } }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px;
+    border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 0;
+    transition: opacity .2s; min-height: 36px;
+  }
+  @media (max-width: 640px) { .btn { min-height: 44px; } }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+  .btn-primary:hover { opacity: .9; text-decoration: none; }
+  .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  .btn-ghost:hover { border-color: var(--accent); text-decoration: none; }
+
+  /* ===== Hero ===== */
+  .hero { text-align: center; padding: 56px 20px 40px; max-width: 960px; margin: 0 auto; }
+  .hero .kicker {
+    display: inline-block; color: #c4b5fd; font-size: 12px; letter-spacing: .12em;
+    border: 1px solid #6d28d9; border-radius: 20px; padding: 4px 14px; margin-bottom: 18px;
+  }
+  .hero h1 { font-size: 34px; color: #fff; font-weight: 800; }
+  .hero p.lead { color: var(--dim); font-size: 15px; margin-top: 14px; }
+  .hero .cta { margin-top: 26px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .metrics {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 40px auto 0;
+    max-width: 860px;
+  }
+  .metric {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 10px;
+  }
+  .metric .num { font-size: 24px; font-weight: 800; color: #c4b5fd; }
+  .metric .lab { font-size: 12px; color: var(--dim); margin-top: 4px; }
+
+  /* ===== 演示区（原功能完整保留）===== */
+  .demo-section { max-width: 1500px; margin: 0 auto; padding: 0 20px; }
+  .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px;
+  }
+  .card h2 { font-size: 15px; color: #fff; margin-bottom: 14px; }
+  .card h2 .tag { font-size: 11px; color: var(--dim); font-weight: 400; margin-left: 6px; }
+  label { display: block; font-size: 12px; color: var(--dim); margin: 10px 0 4px; }
+  input, select, textarea {
+    width: 100%; padding: 9px 11px; background: var(--bg); border: 1px solid var(--line);
+    border-radius: 8px; color: var(--text); font-size: 13px; font-family: inherit; outline: none;
+  }
+  input:focus, textarea:focus { border-color: var(--accent); }
+  textarea { min-height: 90px; resize: vertical; }
+  button.primary {
+    width: 100%; padding: 11px; margin-top: 14px; border: 0; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
+    font-size: 14px; font-weight: 600; cursor: pointer; min-height: 40px;
+  }
+  @media (max-width: 640px) { button.primary, button.ghost { min-height: 44px; } }
+  button.primary:hover { opacity: .92; }
+  button.ghost {
+    width: 100%; background: var(--line); color: var(--text); font-weight: 400; margin-top: 8px;
+    padding: 10px; border: 0; border-radius: 8px; font-size: 13px; cursor: pointer;
+  }
+  button.ghost:hover { background: #475569; }
+  .pipeline { display: flex; flex-direction: column; gap: 10px; }
+  .node {
+    display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: start;
+    padding: 12px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line);
+    opacity: .45; transition: all .3s;
+  }
+  .node.active { opacity: 1; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .node.done { opacity: 1; border-color: var(--ok); }
+  .node .icon {
+    width: 36px; height: 36px; border-radius: 8px; background: var(--line);
+    display: flex; align-items: center; justify-content: center; font-size: 16px; color: #fff;
+  }
+  .node.active .icon { background: var(--accent); }
+  .node.done .icon { background: var(--ok); }
+  .node .title { font-size: 13px; color: #fff; font-weight: 600; }
+  .node .meta { font-size: 12px; color: var(--dim); margin-top: 3px; min-height: 16px; }
+  .node.done .meta { color: #86efac; }
+  .result { margin-top: 16px; display: none; }
+  .ticket {
+    background: #fff; color: var(--bg); border-radius: 12px; padding: 18px; margin-bottom: 12px;
+  }
+  .ticket .row { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; margin-bottom: 8px; }
+  .ticket h3 { font-size: 16px; margin-bottom: 8px; }
+  .ticket p { font-size: 13px; line-height: 1.6; color: #334155; }
+  .chip {
+    display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-right: 4px;
+  }
+  .chip-cat { background: #ede9fe; color: #6d28d9; }
+  .chip-low { background: #dbeafe; color: #1d4ed8; }
+  .chip-medium { background: #fef3c7; color: #b45309; }
+  .chip-high { background: #ffedd5; color: #c2410c; }
+  .chip-critical { background: #fee2e2; color: #b91c1c; }
+  .chip-p1 { background: #fee2e2; color: #b91c1c; }
+  .chip-p2 { background: #ffedd5; color: #c2410c; }
+  .chip-p3 { background: #fef3c7; color: #b45309; }
+  .chip-p4 { background: #dbeafe; color: #1d4ed8; }
+  .kb { background: #fff; border-radius: 10px; overflow: hidden; color: var(--bg); margin-bottom: 12px; }
+  .kb .kh { padding: 10px 14px; background: #ede9fe; color: #6d28d9; font-weight: 600; font-size: 13px; }
+  .kb .kb2 { padding: 12px 14px; font-size: 12.5px; line-height: 1.7; color: #334155; }
+  .feishu { background: #fff; border-radius: 10px; overflow: hidden; color: var(--bg); }
+  .feishu .fh { padding: 10px 14px; color: #fff; font-weight: 600; font-size: 13px; }
+  .feishu .fb { padding: 12px 14px; font-size: 13px; line-height: 1.7; }
+  .fh-red { background: #dc2626; } .fh-orange { background: #ea580c; } .fh-blue { background: #2563eb; }
+  .divider { border: 0; border-top: 1px solid #e2e8f0; margin: 8px 0; }
+  .spinner {
+    display: inline-block; width: 12px; height: 12px; border: 2px solid var(--accent);
+    border-top-color: transparent; border-radius: 50%; animation: spin .8s linear infinite;
+    vertical-align: middle; margin-right: 4px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  h2.sec { color: #fff; margin: 18px 0 10px; font-size: 14px; }
+
+  /* ===== 流程总览区 ===== */
+  .section { max-width: 1200px; margin: 60px auto 0; padding: 0 20px; }
+  .section h2.title { font-size: 24px; color: #fff; text-align: center; }
+  .section .sub { text-align: center; color: var(--dim); font-size: 14px; margin-top: 6px; }
+  .overview-img { margin: 28px auto 0; text-align: center; }
+  .overview-img img { max-width: 100%; border-radius: 12px; border: 1px solid var(--line); }
+  .step-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 30px; }
+  .step {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px;
+  }
+  .step .n { color: #c4b5fd; font-weight: 800; font-size: 13px; }
+  .step h3 { font-size: 14px; color: #fff; margin: 6px 0 4px; }
+  .step p { font-size: 12.5px; color: var(--dim); }
+
+  /* ===== 痛点对比 ===== */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
+  .comp { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .comp.before { border-color: #7f1d1d; }
+  .comp.after { border-color: #065f46; }
+  .comp h3 { font-size: 15px; margin-bottom: 12px; }
+  .comp.before h3 { color: #fca5a5; }
+  .comp.after h3 { color: #6ee7b7; }
+  .comp ul { list-style: none; }
+  .comp li { font-size: 13px; color: var(--dim); padding: 5px 0 5px 22px; position: relative; }
+  .comp.before li::before { content: "✕"; color: #f87171; position: absolute; left: 0; }
+  .comp.after li::before { content: "✓"; color: #34d399; position: absolute; left: 0; }
+
+  /* ===== 收益表 ===== */
+  table.benefit {
+    width: 100%; margin-top: 26px; border-collapse: collapse; table-layout: fixed;
+    background: var(--panel); border-radius: 12px; overflow: hidden;
+  }
+  table.benefit th, table.benefit td {
+    padding: 12px 14px; font-size: 13px; text-align: left; border-bottom: 1px solid var(--line);
+  }
+  table.benefit thead th { background: #26334d; color: #fff; font-weight: 600; }
+  table.benefit td { color: var(--dim); }
+  table.benefit tr:last-child td { border-bottom: 0; }
+  table.benefit td.up { color: #6ee7b7; font-weight: 600; }
+
+  /* ===== 技术亮点 ===== */
+  .tech-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 30px; }
+  .tech { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  .tech svg { width: 22px; height: 22px; color: #c4b5fd; }
+  .tech h3 { font-size: 14px; color: #fff; margin: 8px 0 6px; }
+  .tech p { font-size: 12.5px; color: var(--dim); }
+
+  /* ===== CTA / footer ===== */
+  .cta-band {
+    margin-top: 60px; padding: 46px 20px; text-align: center;
+    background: linear-gradient(135deg, rgba(124,58,237,.18), rgba(79,70,229,.12));
+    border-top: 1px solid var(--line);
+  }
+  .cta-band h2 { font-size: 22px; color: #fff; }
+  .cta-band p { color: var(--dim); font-size: 14px; margin: 10px 0 20px; }
+  .cta-band .btn { font-size: 15px; padding: 12px 26px; }
+  footer { text-align: center; padding: 22px; color: #475569; font-size: 12px; }
+  footer a { color: #94a3b8; }
+
+  /* ===== 响应式 ===== */
+  @media (max-width: 1024px) {
+    .grid { grid-template-columns: 1fr; }
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .tech-grid { grid-template-columns: repeat(2, 1fr); }
+    .step-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .hero h1 { font-size: 24px; }
+    .compare { grid-template-columns: 1fr; }
+    .tech-grid { grid-template-columns: 1fr; }
+    .step-grid { grid-template-columns: 1fr; }
+    .nav-links { margin-left: 0; width: 100%; justify-content: flex-start; }
+    table.benefit { font-size: 12px; }
+    input, select, textarea { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 12 4 20"/><circle cx="12" cy="12" r="3"/>
+    </svg>
+    AI Workflow Automation
+  </div>
+  <div class="nav-links">
+    <a href="#demo">实时演示</a>
+    <a href="#flow">流程架构</a>
+    <a href="#value">业务价值</a>
+    <a href="#tech">技术亮点</a>
+    <a class="btn btn-ghost" href="form/index.html">进入实际应用</a>
+    <a class="btn btn-primary" href="form/index.html">客户进线表单</a>
+  </div>
+</nav>
+
+<!-- ===== Hero ===== -->
+<header class="hero">
+  <span class="kicker">企业 AI 自动化案例 · 基于 n8n</span>
+  <h1>客户进线，自动接住、听懂、分好、落到人</h1>
+  <p class="lead">把每天涌入的客户咨询、表单、邮件、文档，自动完成 分析 → 分类 → RAG 检索 → 摘要 → 工单 → SLA 路由 → 飞书通知，全链路无人工介入。</p>
+  <div class="cta">
+    <a class="btn btn-primary" href="#demo">观看实时流水线</a>
+    <a class="btn btn-ghost" href="form/index.html">去实际应用页提交一条</a>
+  </div>
+  <div class="metrics">
+    <div class="metric"><div class="num">&lt; 1 min</div><div class="lab">客户首次响应</div></div>
+    <div class="metric"><div class="num">28 组合</div><div class="lab">SLA 矩阵：分类 × 紧急度</div></div>
+    <div class="metric"><div class="num">P1 / 30 min</div><div class="lab">高危工单响应时限</div></div>
+    <div class="metric"><div class="num">0.1 / 0.4</div><div class="lab">分温度双模型策略</div></div>
+  </div>
+</header>
+
+<!-- ===== 实时演示区（原功能完整保留）===== -->
+<section class="demo-section" id="demo">
+  <div class="grid">
+    <div class="card">
+      <h2>① 客户进线表单 <span class="tag">模拟客户，提交即可</span></h2>
+      <label>客户姓名</label>
+      <input id="f-name" value="王磊">
+      <label>公司</label>
+      <input id="f-company" value="杭州明远贸易有限公司">
+      <label>联系方式</label>
+      <input id="f-contact" value="wangl@mingyuan.com">
+      <label>来源渠道</label>
+      <select id="f-source">
+        <option>官网表单</option><option>邮件</option><option>企业微信</option>
+        <option>客服电话</option><option>小程序</option>
+      </select>
+      <label>问题描述</label>
+      <textarea id="f-msg">我们生产线今早九点开始系统直接登不进去了，MES 数据同步全断了！车间 80 多个人在等，这是重大事故！！！</textarea>
+      <button class="primary" onclick="run()">提交并生成工单</button>
+      <button class="ghost" onclick="loadSample()">载入一条示例客户</button>
+      <p style="font-size:11.5px;color:var(--dim);margin-top:12px">这是本机规则模拟，演示完整流程。真实运行时接入大模型 + 飞书，点击右上角「进入实际应用」体验。</p>
+    </div>
+
+    <div class="card">
+      <h2>② 自动化流水线（实时）</h2>
+      <div class="pipeline" id="pipe">
+        <div class="node" data-i="0"><div class="icon">📥</div><div><div class="title">Webhook 接收</div><div class="meta">等待进线…</div></div></div>
+        <div class="node" data-i="1"><div class="icon">🧠</div><div><div class="title">LLM 需求分析</div><div class="meta">意图 / 情绪 / 紧急度 · 温度 0.1</div></div></div>
+        <div class="node" data-i="2"><div class="icon">🏷️</div><div><div class="title">AI 智能分类</div><div class="meta">7 类业务自动归口 · 温度 0.1</div></div></div>
+        <div class="node" data-i="3"><div class="icon">📚</div><div><div class="title">知识库检索（RAG）</div><div class="meta">检索相关政策片段</div></div></div>
+        <div class="node" data-i="4"><div class="icon">✍️</div><div><div class="title">自动生成摘要</div><div class="meta">≤60 字 · 引用知识库 · 温度 0.4</div></div></div>
+        <div class="node" data-i="5"><div class="icon">🗂️</div><div><div class="title">生成工单记录</div><div class="meta">结构化字段</div></div></div>
+        <div class="node" data-i="6"><div class="icon">⏱️</div><div><div class="title">SLA 矩阵（28 组合）</div><div class="meta">分类 × 紧急度 → 时限与责任团队</div></div></div>
+        <div class="node" data-i="7"><div class="icon">🗄️</div><div><div class="title">同步飞书 / 数据库</div><div class="meta">写入多维表格（含 SLA 字段）</div></div></div>
+        <div class="node" data-i="8"><div class="icon">🔔</div><div><div class="title">通知负责人</div><div class="meta">飞书卡片按紧急度</div></div></div>
+      </div>
+
+      <div class="result" id="result">
+        <h2 class="sec">知识库检索（RAG）命中</h2>
+        <div class="kb" id="kb"></div>
+        <h2 class="sec">生成的工单</h2>
+        <div class="ticket" id="ticket"></div>
+        <h2 class="sec">飞书通知卡片</h2>
+        <div class="feishu" id="feishu"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 流程总览 ===== -->
+<section class="section" id="flow">
+  <h2 class="title">一条流水线，九个阶段</h2>
+  <p class="sub">从客户进线到负责人触达，全程自动化；每个阶段都对应 n8n 里的一个节点</p>
+  <div class="overview-img">
+    <img src="assets/workflow-overview.png" alt="工作流总览图">
+  </div>
+  <div class="step-grid">
+    <div class="step"><div class="n">01</div><h3>Webhook 统一接收</h3><p>表单、邮件、企微、电话、小程序五个入口，收拢为一条流水线。</p></div>
+    <div class="step"><div class="n">02</div><h3>LLM 需求分析</h3><p>识别意图、情绪、紧急度，让客户的声音变成可处理的数据（温度 0.1）。</p></div>
+    <div class="step"><div class="n">03</div><h3>AI 智能分类</h3><p>7 类业务自动归口：售前 / 售后 / 技术 / 账单 / 合作 / 投诉 / 其他。</p></div>
+    <div class="step"><div class="n">04</div><h3>知识库检索（RAG）</h3><p>检索政策片段，让摘要与回复有依据、口径统一、不靠个人记忆。</p></div>
+    <div class="step"><div class="n">05</div><h3>自动生成摘要</h3><p>≤60 字，引用知识库，负责人扫一眼就知道要不要处理（温度 0.4）。</p></div>
+    <div class="step"><div class="n">06</div><h3>生成结构化工单</h3><p>工单号、客户、分类、情绪、紧急度、摘要全部结构化，可统计可复盘。</p></div>
+    <div class="step"><div class="n">07</div><h3>SLA 矩阵定级</h3><p>7 分类 × 4 紧急度 = 28 组合，算出 P1~P4 时限与责任团队。</p></div>
+    <div class="step"><div class="n">08</div><h3>同步飞书 / 数据库</h3><p>工单一键写入多维表格，全员看到同一份看板，含 SLA 字段。</p></div>
+    <div class="step"><div class="n">09</div><h3>通知负责人</h3><p>飞书卡片带 [SLA 等级]，高危工单秒级触达，出错自动告警管理员。</p></div>
+  </div>
+</section>
+
+<!-- ===== 企业痛点与价值 ===== -->
+<section class="section" id="value">
+  <h2 class="title">业务价值：从「人工分拣」到「分钟级闭环」</h2>
+  <p class="sub">200 人 SaaS 公司每天从 5 个入口收到上百条客户进线——改造前后对比</p>
+  <div class="compare">
+    <div class="comp before">
+      <h3>改造前</h3>
+      <ul>
+        <li>客服早上开 5 个后台翻消息，漏看是常态</li>
+        <li>凭经验分类，新员工常错派，客户被"踢皮球"</li>
+        <li>手动复制粘贴进 Excel，字段混乱、无法统计</li>
+        <li>答案靠个人记忆，口径不一</li>
+        <li>夜间 / 周末无人响应，投诉发酵到社交平台</li>
+      </ul>
+    </div>
+    <div class="comp after">
+      <h3>改造后</h3>
+      <ul>
+        <li>全渠道进线统一接入，进线 0 等待</li>
+        <li>AI 识别意图 / 情绪 / 紧急度，自动归口 7 类业务</li>
+        <li>RAG 检索政策、摘要引用依据，口径统一</li>
+        <li>SLA 矩阵自动定级定责，P1 工单 30 分钟触达</li>
+        <li>飞书卡片 @ 负责人 + 出错自动告警，投诉不隔夜</li>
+      </ul>
+    </div>
+  </div>
+
+  <table class="benefit">
+    <colgroup><col style="width:30%"><col style="width:35%"><col style="width:35%"></colgroup>
+    <thead><tr><th>指标</th><th>改造前</th><th>改造后</th></tr></thead>
+    <tbody>
+      <tr><td>客户首次响应</td><td>数小时 ~ 1 工作日</td><td class="up">&lt; 1 分钟</td></tr>
+      <tr><td>工单错派率</td><td>15% ~ 25%</td><td class="up">&lt; 5%</td></tr>
+      <tr><td>高危工单隔夜未处理</td><td>每周 3~5 起</td><td class="up">≈ 0</td></tr>
+      <tr><td>人工分拣 / 录入</td><td>每人每天 1.5~2 小时</td><td class="up">≈ 0</td></tr>
+      <tr><td>数据完整率</td><td>字段缺失、格式混乱</td><td class="up">100% 结构化</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== 技术亮点 ===== -->
+<section class="section" id="tech">
+  <h2 class="title">技术亮点</h2>
+  <p class="sub">不是玩具 Demo——每一层都是企业级设计</p>
+  <div class="tech-grid">
+    <div class="tech">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <h3>RAG 知识库增强</h3>
+      <p>进线 → 检索知识库 → 摘要引用政策片段。答案有依据、不编造，新人也能给出老员工水平的回复。</p>
+    </div>
+    <div class="tech">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
+      <h3>SLA 矩阵路由</h3>
+      <p>7 分类 × 4 紧急度 = 28 组合 → P1~P4 时限 + 责任团队，通知卡片直接带 SLA 徽章，响应不再是拍脑袋。</p>
+    </div>
+    <div class="tech">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      <h3>错误处理与重试</h3>
+      <p>独立 Error Workflow 出错即飞书告警管理员；关键写库 / 通知节点 retryOnFail，问题不过夜。</p>
+    </div>
+    <div class="tech">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      <h3>分温度双模型</h3>
+      <p>分析 / 分类用 temperature 0.1 保证一致性，摘要用 0.4 更自然——同一套凭据，一个表达式切换。</p>
+    </div>
+    <div class="tech">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>
+      <h3>国产模型适配</h3>
+      <p>一套 OpenAI 兼容协议，MODEL_PROVIDER 环境变量切换 DeepSeek / 通义 / 智谱 / Kimi，国内直连。</p>
+    </div>
+    <div class="tech">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg>
+      <h3>国内一键部署</h3>
+      <p>docker-compose 一键起 n8n + 自动导入工作流，镜像加速、npm 国内源、飞书原生集成，无需海外网络。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<div class="cta-band">
+  <h2>想看看真实提交长什么样？</h2>
+  <p>演示页是规则模拟；实际应用页对接真实 Webhook + 大模型 + 飞书，提交一条试试。</p>
+  <a class="btn btn-primary" href="form/index.html">进入实际应用页</a>
+</div>
+
+<footer>
+  AI Business Workflow Automation · 基于 <a href="https://github.com/n8n-io/n8n">n8n</a> 的企业 AI 自动化案例
+  <br><a href="README_CN.md">国内部署指南</a> · <a href="docs/nodes.md">节点说明</a> · <a href="docs/business-value.md">业务价值</a>
+</footer>
+
+<script>
+// ====== 内嵌示例客户 ======
+const SAMPLES = [
+  {name:"王磊",company:"杭州明远贸易",contact:"wangl@mingyuan.com",source:"官网表单",msg:"我们公司有 120 人，想咨询一下你们企业版怎么收费？能不能先开 30 天试用？"},
+  {name:"李思颖",company:"上海澄光设计",contact:"13800001111",source:"邮件",msg:"上周四下单的年度会员，发票至今没收到，财务已经催我第三次了，请今天务必处理。"},
+  {name:"张建国",company:"广州恒锐制造",contact:"zhangjg@hengrui.cn",source:"客服电话",msg:"我们生产线今早九点开始系统直接登不进去了，MES 数据同步全断了！车间 80 多个人在等，这是重大事故！！！"},
+  {name:"刘洋",company:"深圳前海创智",contact:"liuyang@qianhai.ai",source:"官网表单",msg:"我们是做 AI 创业的，看到你们开放平台，想谈一下战略合作和渠道代理，方便约个下周的会吗？"},
+  {name:"赵敏",company:"成都悦居民宿",contact:"13900002222",source:"小程序",msg:"App 昨晚更新之后，订单列表一直转圈加载不出来，客人的预订我都看不到，今天就要退房了，很急！"},
+  {name:"吴强",company:"武汉长江教育",contact:"wuqiang@cjedu.com",source:"客服电话",msg:"我要投诉！你们销售答应给我一周上门培训，结果合同签完就人间蒸发，这已经是第三个人接我电话了！"},
+  {name:"徐军",company:"青岛港口物流",contact:"xujun@qingdao-port.com",source:"邮件",msg:"发票抬头开错了，税号少了一位，已经退回，麻烦重新开一份，财务这周就要归档。"},
+  {name:"高宇",company:"沈阳北方重工",contact:"gaoyu@bfzg.com",source:"客服电话",msg:"我们买的私有化部署版，今早后台报 502，运维已经重启过容器还是不行，远程协助请马上安排。"},
+  {name:"邓超",company:"石家庄燕赵医药",contact:"13600004444",source:"客服电话",msg:"合同写的是 7×24 支持，昨晚出问题打了三小时电话没人接！这种服务态度我要发函投诉到你们总部。"},
+  {name:"宋雨",company:"宁波舟山港供应链",contact:"songyu@zs-port.com",source:"邮件",msg:"你好，我们集团 IT 部想集中采购，年预算大概 80 万，能否给个大客户折扣方案？"},
+];
+
+// ====== 模拟知识库（对应 simulation/knowledge-base.md）======
+const KB = [
+  {tags:["收费","企业版","价格","费用","多少钱"], content:"企业版按席位年付，50 人起订，基础版 ¥199/席/年，专业版 ¥399/席/年，企业版需商务报价。"},
+  {tags:["试用","30 天"], content:"专业版支持 30 天免费试用，企业版可申请 14 天 POC 环境。"},
+  {tags:["发票","开票"], content:"对公转账到账后 3 个工作日内开具电子发票，可在控制台自助申请。"},
+  {tags:["发票","抬头","税号","重开"], content:"发票抬头/税号错误可发起红冲重开，或联系财务部（billing@yunqi.com），1 个工作日内处理。"},
+  {tags:["登录","登不","打不开"], content:"登录失败请先检查浏览器缓存与网络；连续失败请联系技术支持，紧急故障 30 分钟内响应。"},
+  {tags:["502","500","故障","宕机"], content:"平台故障会在状态页公告，SLA 赔付按合同执行；私有化部署版优先远程协助。"},
+  {tags:["退款","退订","取消"], content:"未使用满 30 天的年付订单支持按剩余时长退款；已开发票需先红冲。"},
+  {tags:["数据","存储","region","节点"], content:"中国大陆节点默认华东（上海）；跨境业务可配置海外节点，满足数据出境合规要求。"},
+  {tags:["等保","合规","安全"], content:"产品通过等保三级测评，支持签署 DPA（数据处理协议）。"},
+  {tags:["合作","代理","渠道"], content:"联系商务团队（bd@yunqi.com）提交合作资料，审核通过后按阶梯返佣。"},
+  {tags:["折扣","采购","预算"], content:"集团集中采购可申请大客户折扣方案，具体联系商务团队报价。"},
+  {tags:["投诉","SLA","响应"], content:"P1（30 分钟响应）：投诉+高/紧急、技术支持+紧急、任何 critical 工单；P2 1~2h；P3 4~8h；P4 24h。"},
+];
+
+function searchKB(msg, topK = 3) {
+  const hits = KB.map(item => {
+    const score = item.tags.filter(t => msg.includes(t)).length;
+    return { item, score };
+  }).filter(h => h.score > 0).sort((a, b) => b.score - a.score).slice(0, topK);
+  return hits.map(h => h.item.content);
+}
+
+// ====== 本地规则模拟 AI ======
+function analyze(msg) {
+  const m = msg;
+  let category = "other", catLabel = "其他";
+  if (/投诉|曝光|差评|说法|发函|人间蒸发|服务态度/.test(m)) { category="complaint"; catLabel="投诉"; }
+  else if (/合作|代理|渠道|战略合作|联合案例/.test(m)) { category="partnership"; catLabel="商务合作"; }
+  else if (/发票|账单|扣款|报销|付款|多扣|退款|退钱|退订|取消.*会员/.test(m)) { category="billing"; catLabel="账单/付款"; }
+  else if (/登不进|登录不|打不开|报错|崩溃|502|500|宕机|故障|转圈|加载不出来|重启|推送|bug/.test(m)) { category="tech_support"; catLabel="技术支持"; }
+  else if (/退款|退货|退换|取消订单|改套餐/.test(m)) { category="after_sales"; catLabel="售后/退换"; }
+  else if (/价格|收费|多少钱|试用|采购|报价|预算|席位|企业版|个人版|团队版|对比|迁移|折扣/.test(m)) { category="sales_inquiry"; catLabel="售前咨询"; }
+  let urgency = "low", urgLabel = "低紧急";
+  if (/重大事故|马上|立刻|紧急|宕机|全断|全停|车间|生产线|三小时|80 多人|今天必须|今天就要/.test(m)) { urgency="critical"; urgLabel="紧急"; }
+  else if (/今天|今天就要|今天务必|这周|财务.*催|很急|催我/.test(m)) { urgency="high"; urgLabel="高紧急"; }
+  else if (/下周|方便约|想了解|咨询一下/.test(m)) { urgency="low"; urgLabel="低紧急"; }
+  else { urgency="medium"; urgLabel="中紧急"; }
+  let sentiment = "neutral", sentLabel = "中性";
+  const exclaim = (m.match(/!/g)||[]).length;
+  if (/投诉|曝光|发函|人间蒸发|服务态度|重大/.test(m) || exclaim>=3) { sentiment="angry"; sentLabel="愤怒"; }
+  else if (/急|催|今天务必|今天必须|今天就要/.test(m)) { sentiment="negative"; sentLabel="负面"; }
+  else if (/用得很好|顺手|谢谢|不错/.test(m)) { sentiment="positive"; sentLabel="正面"; }
+  const intent = m.length > 40 ? m.slice(0,40)+"…" : m;
+  const summary = `客户${intent}（${catLabel}·${urgLabel}·${sentLabel}情绪）`;
+  return { category, catLabel, urgency, urgLabel, sentiment, sentLabel, intent, summary };
+}
+
+// ====== SLA 矩阵（与 n8n workflow 的 JS 一致）======
+function sla(category, urgency) {
+  const SLAs = {
+    sales_inquiry:{level:'P4',time:'24h', team:'销售部'},
+    after_sales:  {level:'P3',time:'8h',  team:'售后部'},
+    tech_support: {level:'P3',time:'4h',  team:'技术支持'},
+    billing:      {level:'P3',time:'4h',  team:'财务部'},
+    partnership:  {level:'P4',time:'24h', team:'商务部'},
+    complaint:    {level:'P2',time:'2h',  team:'客户成功'},
+    other:        {level:'P4',time:'24h', team:'客服中心'},
+  };
+  const U = { low:0, medium:1, high:2, critical:3 };
+  const urgent = { high:{level:'P2',time:'1h'}, critical:{level:'P1',time:'30min'} };
+  const base = SLAs[category] || SLAs.other;
+  let s = Object.assign({}, base);
+  if (U[urgency] >= 2) s = Object.assign({}, base, urgent[urgency]);
+  if (category === 'complaint' && U[urgency] >= 2) s = {level:'P1', time:'30min', team:'客户成功+主管'};
+  if (category === 'tech_support' && urgency === 'critical') s = {level:'P1', time:'30min', team:'技术支持+主管'};
+  return s;
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function run() {
+  const name = document.getElementById('f-name').value.trim();
+  const company = document.getElementById('f-company').value.trim();
+  const contact = document.getElementById('f-contact').value.trim();
+  const source = document.getElementById('f-source').value;
+  const msg = document.getElementById('f-msg').value.trim();
+  if (!name || !msg) { alert('请填写客户姓名和问题描述'); return; }
+
+  document.querySelectorAll('.node').forEach(n => n.className='node');
+  document.getElementById('result').style.display = 'none';
+
+  const nodes = document.querySelectorAll('.node');
+  const a = analyze(msg);
+  const kbHits = searchKB(msg);
+  const s = sla(a.category, a.urgency);
+  const ticketId = 'TK-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(Math.random()*9000+1000);
+
+  setNode(0, 'active', '<span class="spinner"></span>接收中…');
+  await sleep(450);
+  setNode(0, 'done', `✓ 已收到来自 ${source} 的进线`);
+
+  setNode(1, 'active', '<span class="spinner"></span>理解客户意图…');
+  await sleep(850);
+  setNode(1, 'done', `意图：${a.intent} · 情绪：${a.sentLabel} · 紧急度：${a.urgLabel}`);
+
+  setNode(2, 'active', '<span class="spinner"></span>归类业务线…');
+  await sleep(650);
+  setNode(2, 'done', `✓ 归入「${a.catLabel}」（${a.category}）`);
+
+  setNode(3, 'active', '<span class="spinner"></span>检索知识库…');
+  await sleep(700);
+  setNode(3, 'done', kbHits.length ? `✓ 命中 ${kbHits.length} 条相关政策片段` : '✓ 无精确命中（摘要将不引用知识库）');
+
+  setNode(4, 'active', '<span class="spinner"></span>生成摘要…');
+  await sleep(600);
+  setNode(4, 'done', `✓ ${a.summary}`);
+
+  setNode(5, 'active', '<span class="spinner"></span>生成工单…');
+  await sleep(450);
+  setNode(5, 'done', `✓ 工单号 ${ticketId}，字段已结构化`);
+
+  setNode(6, 'active', '<span class="spinner"></span>计算 SLA…');
+  await sleep(500);
+  setNode(6, 'done', `✓ ${s.level} · ${s.time} 内响应 · 责任团队：${s.team}`);
+
+  setNode(7, 'active', '<span class="spinner"></span>写入飞书多维表格…');
+  await sleep(550);
+  setNode(7, 'done', '✓ 多维表格新增一行（含 SLA 字段）');
+
+  setNode(8, 'active', '<span class="spinner"></span>推送飞书卡片…');
+  await sleep(450);
+  setNode(8, 'done', `✓ 已 @ 责任团队（${a.urgLabel==='紧急'?'红色卡片':a.urgLabel==='高紧急'?'橙色卡片':'蓝色卡片'}）`);
+
+  renderResult({ticketId, name, company, contact, source, msg, ...a, kbHits, sla:s});
+}
+
+function setNode(i, state, meta) {
+  const n = document.querySelectorAll('.node')[i];
+  n.className = 'node ' + state;
+  n.querySelector('.meta').innerHTML = meta;
+}
+
+function renderResult(d) {
+  const urgClass = {low:'chip-low', medium:'chip-medium', high:'chip-high', critical:'chip-critical'}[d.urgency];
+  const pClass = {P1:'chip-p1', P2:'chip-p2', P3:'chip-p3', P4:'chip-p4'}[d.sla.level];
+
+  document.getElementById('kb').innerHTML = d.kbHits.length ? `
+    <div class="kh">📚 RAG 检索 · 命中 ${d.kbHits.length} 条</div>
+    <div class="kb2">${d.kbHits.map(h => '• ' + h).join('<br>')}</div>
+  ` : `
+    <div class="kh">📚 RAG 检索 · 未命中</div>
+    <div class="kb2">未检索到相关政策片段，摘要未引用知识库（不影响主流程）。</div>
+  `;
+
+  document.getElementById('ticket').innerHTML = `
+    <div class="row"><span>工单 ${d.ticketId}</span><span>${new Date().toLocaleString('zh-CN')}</span></div>
+    <h3>${d.company || d.name}</h3>
+    <div>
+      <span class="chip chip-cat">${d.catLabel}</span>
+      <span class="chip ${urgClass}">${d.urgLabel}</span>
+      <span class="chip chip-low">${d.sentLabel}情绪</span>
+      <span class="chip ${pClass}">SLA ${d.sla.level}</span>
+      <span class="chip chip-p4">${d.sla.time} 响应</span>
+    </div>
+    <hr class="divider">
+    <p><b>联系方式：</b>${d.contact}<br>
+       <b>来源：</b>${d.source}<br>
+       <b>客户原话：</b>${d.msg}<br>
+       <b>AI 摘要：</b>${d.summary}<br>
+       <b>SLA：</b>${d.sla.level} · ${d.sla.time} 内响应 · 责任团队 ${d.sla.team}</p>
+  `;
+  const headerCls = d.urgency==='critical' ? 'fh-red' : d.urgency==='high' ? 'fh-orange' : 'fh-blue';
+  const icon = d.urgency==='critical' ? '🚨' : d.urgency==='high' ? '⚠️' : '📬';
+  document.getElementById('feishu').innerHTML = `
+    <div class="fh ${headerCls}">${icon} 新客户工单 ${d.ticketId} [${d.sla.level}]</div>
+    <div class="fb">
+      <b>分类：</b>${d.catLabel}　<b>紧急度：</b>${d.urgLabel}　<b>情绪：</b>${d.sentLabel}<br>
+      <b>客户：</b>${d.name}（${d.contact}）<br>
+      <b>公司：</b>${d.company}<br>
+      <hr class="divider">
+      <b>AI 摘要：</b>${d.summary}<br>
+      <hr class="divider">
+      <b>SLA：</b>${d.sla.level} · ${d.sla.time} 内响应 · 责任团队：${d.sla.team}<br>
+      <hr class="divider">
+      <span style="color:#94a3b8;font-size:12px">来源：${d.source} · 已同步至飞书多维表格（含 SLA 字段）</span>
+    </div>
+  `;
+  document.getElementById('result').style.display = 'block';
+}
+
+function loadSample() {
+  const s = SAMPLES[Math.floor(Math.random()*SAMPLES.length)];
+  document.getElementById('f-name').value = s.name;
+  document.getElementById('f-company').value = s.company;
+  document.getElementById('f-contact').value = s.contact;
+  document.getElementById('f-source').value = s.source;
+  document.getElementById('f-msg').value = s.msg;
+}
+</script>
+</body>
+</html>
