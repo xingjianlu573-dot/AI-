@@ -110,7 +110,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=请用不超过 60 个汉字，为这条客户工单生成一段摘要，便于负责人在飞书通知里快速扫读。\n\n客户：{{ $('① 表单/Webhook 接收').item.json.body.name || '未知' }}\n分类：{{ $json.category }}\n情绪：{{ $json.sentiment }}\n紧急度：{{ $json.urgency }}\n诉求：{{ $json.intent }}\n期望动作：{{ $json.expectedAction }}",
+        "text": "=请用不超过 60 个汉字，为这条客户工单生成一段摘要，便于负责人在飞书通知里快速扫读。\n\n客户：{{ $('① 表单/Webhook 接收').item.json.body.name || '未知' }}\n分类：{{ $json.category }}\n情绪：{{ $json.sentiment }}\n紧急度：{{ $json.urgency }}\n诉求：{{ $json.intent }}\n期望动作：{{ $json.expectedAction }}\n\n知识库检索到的相关政策片段（可用于澄清或补充背景，不要照抄）：\n{{ $('知识库检索（RAG）').item.json.top_k ? $('知识库检索（RAG）').item.json.top_k.map(x => x.content).join('；').slice(0, 300) : '无' }}\n\n输出就是摘要正文，不要加前缀。",
         "hasOutputParser": false,
         "options": {
           "systemMessage": "你是工单摘要撰写人。输出就是摘要正文，不要加前缀、不要加引号、不要换行。"
@@ -231,13 +231,14 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"fields\": {\n    \"工单号\": $json.ticket_id,\n    \"客户\": $json.customer_name,\n    \"联系方式\": $json.contact,\n    \"来源\": $json.source,\n    \"分类\": $json.category,\n    \"情绪\": $json.sentiment,\n    \"紧急度\": $json.urgency,\n    \"摘要\": $json.summary,\n    \"原始内容\": $json.raw_message,\n    \"状态\": $json.status,\n    \"创建时间\": {{ $now.format('x') }}\n  }\n}",
+        "jsonBody": "={\n  \"fields\": {\n    \"工单号\": $json.ticket_id,\n    \"客户\": $json.customer_name,\n    \"联系方式\": $json.contact,\n    \"来源\": $json.source,\n    \"分类\": $json.category,\n    \"情绪\": $json.sentiment,\n    \"紧急度\": $json.urgency,\n    \"SLA等级\": $json.sla_level,\n    \"SLA时限\": $json.sla_time,\n    \"摘要\": $json.summary,\n    \"原始内容\": $json.raw_message,\n    \"状态\": $json.status,\n    \"创建时间\": {{ $now.format('x') }}\n  }\n}",
         "options": {
           "response": {
             "response": {
               "responseFormat": "json"
             }
-          }
+          },
+          "retryOnFail": true
         }
       },
       "id": "node-sync-feishu",
@@ -247,38 +248,6 @@
       "position": [
         1000,
         100
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "strict"
-          },
-          "conditions": [
-            {
-              "id": "c1",
-              "leftValue": "={{ $json.urgency }}",
-              "rightValue": "critical",
-              "operator": {
-                "type": "string",
-                "operation": "notEmpty"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "node-urgency-switch",
-      "name": "紧急度路由",
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.2,
-      "position": [
-        1000,
-        280
       ]
     },
     {
@@ -298,8 +267,10 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"receive_id\": \"{{ $env.FEISHU_OWNER_USER_ID }}\",\n  \"msg_type\": \"interactive\",\n  \"content\": JSON.stringify({\n    config: { wide_screen_mode: true },\n    header: {\n      template: $json.urgency === 'critical' ? 'red' : ($json.urgency === 'high' ? 'orange' : 'blue'),\n      title: { tag: 'plain_text', content: '🚨 新客户工单 ' + $json.ticket_id }\n    },\n    elements: [\n      { tag: 'div', text: { tag: 'lark_md', content: '**分类：**' + $json.category + '\\n**紧急度：**' + $json.urgency + '\\n**情绪：**' + $json.sentiment + '\\n**客户：**' + $json.customer_name + '（' + $json.contact + '）' } },\n      { tag: 'hr' },\n      { tag: 'div', text: { tag: 'lark_md', content: '**AI 摘要：**\\n' + $json.summary } },\n      { tag: 'note', elements: [{ tag: 'plain_text', content: '来源：' + $json.source + ' · 已同步至飞书多维表格' }] }\n    ]\n  })\n}",
-        "options": {}
+        "jsonBody": "={\n  \"receive_id\": \"{{ $env.FEISHU_OWNER_USER_ID }}\",\n  \"msg_type\": \"interactive\",\n  \"content\": JSON.stringify({\n    config: { wide_screen_mode: true },\n    header: {\n      template: $json.urgency === 'critical' ? 'red' : ($json.urgency === 'high' ? 'orange' : 'blue'),\n      title: { tag: 'plain_text', content: '新客户工单 ' + $json.ticket_id + ' [' + $json.sla_level + ']' }\n    },\n    elements: [\n      { tag: 'div', text: { tag: 'lark_md', content: '**分类：**' + $json.category + '\\n**紧急度：**' + $json.urgency + '\\n**情绪：**' + $json.sentiment + '\\n**客户：**' + $json.customer_name + '（' + $json.contact + '）' } },\n      { tag: 'hr' },\n      { tag: 'div', text: { tag: 'lark_md', content: '**AI 摘要：**\\n' + $json.summary } },\n      { tag: 'div', text: { tag: 'lark_md', content: '**SLA：**' + $json.sla_level + ' · ' + $json.sla_time + ' 内响应 · 责任团队：' + $json.sla_owner } },\n      { tag: 'note', elements: [{ tag: 'plain_text', content: '来源：' + $json.source + ' · 已同步至飞书多维表格' }] }\n    ]\n  })\n}",
+        "options": {
+          "retryOnFail": true
+        }
       },
       "id": "node-notify-owner",
       "name": "⑦ 自动通知负责人",
@@ -333,12 +304,66 @@
         }
       },
       "id": "node-chat-model",
-      "name": "OpenAI Chat Model",
+      "name": "OpenAI Chat Model（分析/分类）",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
         120,
         -40
+      ]
+    },
+    {
+      "parameters": {
+        "model": "={{ $env.OPENAI_MODEL || 'gpt-4o-mini' }}",
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "id": "node-chat-model-summary",
+      "name": "OpenAI Chat Model（摘要）",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.KB_SEARCH_URL }}?q={{ encodeURIComponent($('③ AI 智能分类').item.json.intent || $('① 表单/Webhook 接收').item.json.body.message) }}&top_k=3",
+        "method": "GET",
+        "authentication": "none",
+        "sendHeaders": false,
+        "sendBody": false,
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "retryOnFail": true
+        }
+      },
+      "id": "node-kb-search",
+      "name": "知识库检索（RAG）",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// SLA 矩阵：分类 × 紧急度 → 响应时限 / 负责人团队\nconst SLAs = {\n  //            low                 medium              high                critical\n  sales_inquiry:{level:'P4',time:'24h', team:'销售部'},\n  after_sales:  {level:'P3',time:'8h',  team:'售后部'},\n  tech_support: {level:'P3',time:'4h',  team:'技术支持'},\n  billing:      {level:'P3',time:'4h',  team:'财务部'},\n  partnership:  {level:'P4',time:'24h', team:'商务部'},\n  complaint:    {level:'P2',time:'2h',  team:'客户成功'},\n  other:        {level:'P4',time:'24h', team:'客服中心'},\n};\nconst U = { low:0, medium:1, high:2, critical:3 };\nconst urgent = { 'high': {level:'P2',time:'1h'}, 'critical': {level:'P1',time:'30min'} };\nconst cat = $json.category || 'other';\nconst urg = $json.urgency || 'low';\nconst base = SLAs[cat] || SLAs.other;\nlet sla = base;\nif (U[urg] >= 2) sla = Object.assign({}, base, urgent[urg]);\n// 特殊：投诉 + 高/紧急 一律 P1\nif (cat === 'complaint' && U[urg] >= 2) sla = {level:'P1', time:'30min', team:'客户成功+主管'};\nif (cat === 'tech_support' && urg === 'critical') sla = {level:'P1', time:'30min', team:'技术支持+主管'};\n$json.sla_level = sla.level;\n$json.sla_time = sla.time;\n$json.sla_owner = sla.team;\nreturn $json;"
+      },
+      "id": "node-sla-matrix",
+      "name": "SLA 矩阵（28 组合）",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1240,
+        440
       ]
     }
   ],
@@ -358,7 +383,7 @@
       "ai_languageModel": [
         [
           {
-            "node": "OpenAI Chat Model",
+            "node": "OpenAI Chat Model（分析/分类）",
             "type": "ai_languageModel",
             "index": 0
           }
@@ -378,7 +403,7 @@
       "ai_languageModel": [
         [
           {
-            "node": "OpenAI Chat Model",
+            "node": "OpenAI Chat Model（分析/分类）",
             "type": "ai_languageModel",
             "index": 0
           }
@@ -396,7 +421,7 @@
       "main": [
         [
           {
-            "node": "④ 自动生成摘要",
+            "node": "知识库检索（RAG）",
             "type": "main",
             "index": 0
           }
@@ -407,7 +432,7 @@
       "ai_languageModel": [
         [
           {
-            "node": "OpenAI Chat Model",
+            "node": "OpenAI Chat Model（摘要）",
             "type": "ai_languageModel",
             "index": 0
           }
@@ -432,7 +457,7 @@
             "index": 0
           },
           {
-            "node": "紧急度路由",
+            "node": "SLA 矩阵（28 组合）",
             "type": "main",
             "index": 0
           }
@@ -450,7 +475,18 @@
         ]
       ]
     },
-    "紧急度路由": {
+    "知识库检索（RAG）": {
+      "main": [
+        [
+          {
+            "node": "④ 自动生成摘要",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SLA 矩阵（28 组合）": {
       "main": [
         [
           {

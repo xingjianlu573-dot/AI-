@@ -1,0 +1,74 @@
+{
+  "name": "Error Handler - 主流程异常告警",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "node-error-trigger",
+      "name": "当工作流出错时",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=user_id",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"receive_id\": \"{{ $env.FEISHU_OWNER_USER_ID }}\",\n  \"msg_type\": \"interactive\",\n  \"content\": JSON.stringify({\n    config: { wide_screen_mode: true },\n    header: {\n      template: 'red',\n      title: { tag: 'plain_text', content: '工作流执行异常' }\n    },\n    elements: [\n      { tag: 'div', text: { tag: 'lark_md', content: '**来源工作流：**' + ($json.workflow?.name || '未知') + '\\n**出错节点：**' + ($json.error?.node || '未知') + '\\n**错误信息：**' + ($json.error?.message || $json.error || '未知') } },\n      { tag: 'note', elements: [{ tag: 'plain_text', content: '请尽快排查，失败工单已进入重试或人工兜底流程' }] }\n    ]\n  })\n}",
+        "options": {
+          "retryOnFail": true
+        }
+      },
+      "id": "node-error-notify",
+      "name": "飞书告警管理员",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "当工作流出错时": {
+      "main": [
+        [
+          {
+            "node": "飞书告警管理员",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "tags": [
+    {
+      "name": "enterprise-ai"
+    },
+    {
+      "name": "error-handler"
+    }
+  ]
+}

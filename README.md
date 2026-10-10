@@ -2,28 +2,8 @@
 
 🔗 **[在线演示](https://xingjianlu573-dot.github.io/AI-/)** ｜ **[GitHub 仓库](https://github.com/xingjianlu573-dot/AI-)** ｜ [🇨🇳 国内部署指南](./README_CN.md)
 
-> 一个面向企业场景的 
->
-> **AI 工作流自动化**
->
->  案例：基于开源工作流引擎 
->
-> [n8n](https://github.com/n8n-io/n8n)
->
-> ，把每天涌入的客户咨询、表单、邮件、文档
->
-> **自动接住 → 听懂 → 分类 → 落库 → 通知到人**
->
-> 。
-> 开箱支持 
->
-> **国产大模型切换**
->
-> （DeepSeek / 通义千问 / 智谱 GLM / 月之暗面 Kimi），
->
-> **国内一键 Docker 部署**
->
-> ，无需海外网络环境。
+> 一个面向企业场景的 **AI 工作流自动化** 案例：基于开源工作流引擎 [n8n](https://github.com/n8n-io/n8n)，把每天涌入的客户咨询、表单、邮件、文档 **自动接住 → 听懂 → 分类 → RAG 检索 → 落库 → SLA 路由 → 通知到人**。
+> 开箱支持 **国产大模型切换**（DeepSeek / 通义千问 / 智谱 GLM / 月之暗面 Kimi）、**RAG 知识库增强**、**SLA 矩阵路由**、**国内一键 Docker 部署**，无需海外网络环境。
 
 [🇨🇳 国内部署指南 README\_CN.md](./README_CN.md) · [业务价值说明](./docs/business-value.md) · [节点说明](./docs/nodes.md)
 
@@ -37,13 +17,15 @@
 
 | 能力               | 本项目落地                                         |
 | ---------------- | --------------------------------------------- |
-| **Workflow 自动化** | n8n 串联 Webhook → LLM → 分类 → 落库 → 通知，全链路无人工介入  |
-| **Agent 式决策**    | LLM 节点输出意图 / 情绪 / 紧急度，由 "紧急度路由" 决定是否升级告警      |
+| **Workflow 自动化** | n8n 串联 Webhook → LLM → 分类 → RAG → 落库 → SLA → 通知，全链路无人工介入  |
+| **RAG 知识库增强**    | 进线 → 检索知识库（Qdrant/pgvector/飞书知识库）→ 摘要引用政策片段，答案有依据不编造 |
+| **Agent 式决策**    | LLM 节点输出意图 / 情绪 / 紧急度，由 SLA 矩阵决定响应时限与责任团队      |
+| **SLA 矩阵路由**     | 7 分类 × 4 紧急度 = 28 组合 → P1~P4 时限 + 责任团队，通知卡片直接带 SLA |
 | **结构化输出**        | 用 Structured Output 强约束模型，不让自由发挥污染工单数据        |
-| **RAG / 知识沉淀**   | 所有工单自动写入飞书多维表格，天然形成可检索的客户知识库                  |
+| **分温度模型策略**      | 分析/分类用 temperature 0.1 保证一致性，摘要用 0.4 更自然 |
+| **错误处理与重试**      | 独立 Error Workflow 告警管理员，关键节点 retryOnFail       |
 | **国产模型适配**       | 一套 OpenAI 兼容协议，通过环境变量切换 4 家国产模型               |
 | **国内部署能力**       | docker-compose 一键起、Docker 镜像加速、npm 国内源、飞书原生集成 |
-| **可观测**          | 每步入参出参留痕、失败重试、健康检查                            |
 
 
 
@@ -80,17 +62,21 @@
             ↓
    ① Webhook 统一接收
             ↓
-   ② LLM 需求分析（意图 / 情绪 / 紧急度）
+   ② LLM 需求分析（意图 / 情绪 / 紧急度 · 温度 0.1）
             ↓
    ③ AI 智能分类（售前/售后/技术/账单/合作/投诉/其他）
             ↓
-   ④ 自动生成 60 字摘要
+   ④ 知识库检索（RAG）：检索相关政策片段
             ↓
-   ⑤ 生成结构化工单
+   ⑤ 自动生成摘要（≤60 字 · 引用知识库 · 温度 0.4）
             ↓
-   ⑥ 同步飞书多维表格 / MySQL
+   ⑥ 生成结构化工单
             ↓
-   ⑦ 按紧急度飞书卡片通知负责人（红/橙/蓝）
+   ⑦ SLA 矩阵（28 组合：P1~P4 时限 + 责任团队）
+            ↓
+   ⑧ 同步飞书多维表格 / MySQL（含 SLA 字段）
+            ↓
+   ⑨ 按紧急度飞书卡片通知负责人（红/橙/蓝 + SLA 徽章）
 ```
 
 
@@ -135,14 +121,19 @@
 .
 ├── README.md                  # 本文件（作品集主页）
 ├── README_CN.md               # 国内部署完整指南
-├── .env.example               # 所有环境变量（含国产模型切换）
+├── .env.example               # 所有环境变量（含国产模型切换 + RAG）
 ├── docker-compose.yml         # 一键起 n8n
+├── index.html                 # 在线演示页（GitHub Pages 根路径）
 ├── workflows/
-│   └── customer-inbox-ai-automation.json   # 导入 n8n 即跑
+│   ├── customer-inbox-ai-automation.json   # 主工作流：9 阶段（含 RAG + SLA）
+│   └── error-handler.json     # 错误处理工作流（异常自动告警管理员）
+├── demo/
+│   └── index.html             # 演示页源文件（与根 index.html 同步）
 ├── form/
-│   └── index.html             # 客户进线表单
+│   └── index.html             # 客户进线表单（连真实 Webhook 用）
 ├── simulation/
-│   └── sample-tickets.json    # 25 条标注好的模拟工单
+│   ├── sample-tickets.json    # 25 条标注好的模拟工单
+│   └── knowledge-base.md      # 模拟知识库（RAG 检索源，可导入向量库）
 ├── scripts/
 │   └── test_ai_provider.py    # AI 接口连通性测试
 ├── assets/
